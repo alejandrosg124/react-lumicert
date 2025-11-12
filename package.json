@@ -31,9 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@testing-library/cypress": "^10.0.3",
     "@types/bcrypt": "^5.0.2",
-    "@types/cypress": "^1.1.6",
     "@types/google.maps": "^3.58.1",
     "@types/jest": "^29.5.14",
     "@types/js-cookie": "^3.0.6",
