@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { 
   fetchConsumoTotalMes, 
   fetchConsumoMesAnterior, 
@@ -7,12 +7,14 @@ import {
   fetchNotificaciones,
   fetchEstadisticas,
   fetchConsumoDiario,
+  fetchConsumoPorHora,
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
   type SectoresResponse,
   type NotificacionesResponse,
   type EstadisticasResponse,
-  type ConsumoDiarioResponse
+  type ConsumoDiarioResponse,
+  type ConsumoHoraResponse
 } from '../lib/api'
 
 export const Index = () => {
@@ -22,6 +24,7 @@ export const Index = () => {
   const [notificaciones, setNotificaciones] = useState<NotificacionesResponse['data']>([])
   const [estadisticas, setEstadisticas] = useState<EstadisticasResponse['data'] | null>(null)
   const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
+  const [consumoPorHora, setConsumoPorHora] = useState<ConsumoHoraResponse['data']>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -35,14 +38,16 @@ export const Index = () => {
           sectoresData,
           notificacionesData,
           estadisticasData,
-          consumoDiarioData
+          consumoDiarioData,
+          consumoPorHoraData
         ] = await Promise.all([
           fetchConsumoTotalMes(),
           fetchConsumoMesAnterior(),
           fetchSectores(),
           fetchNotificaciones(),
           fetchEstadisticas(),
-          fetchConsumoDiario()
+          fetchConsumoDiario(),
+          fetchConsumoPorHora()
         ])
 
         console.log('Datos recibidos:', {
@@ -51,7 +56,17 @@ export const Index = () => {
           sectores: sectoresData,
           notificaciones: notificacionesData,
           estadisticas: estadisticasData,
-          consumoDiario: consumoDiarioData
+          consumoDiario: consumoDiarioData,
+          consumoPorHora: consumoPorHoraData
+        })
+
+        // Completar horas faltantes con 0
+        const horasCompletas = Array.from({ length: 24 }, (_, i) => {
+          const horaData = consumoPorHoraData.data.find(h => h.hora === i)
+          return {
+            hora: i,
+            consumoPromedio: horaData ? horaData.consumoPromedio : 0
+          }
         })
 
         setConsumoMes(consumoMesData.data)
@@ -60,6 +75,7 @@ export const Index = () => {
         setNotificaciones(notificacionesData.data)
         setEstadisticas(estadisticasData.data)
         setConsumoDiario(consumoDiarioData.data)
+        setConsumoPorHora(horasCompletas)
       } catch (error) {
         console.error('Error al cargar datos:', error)
       } finally {
@@ -221,14 +237,45 @@ export const Index = () => {
         </div>
 
         {/* Gráficos inferiores */}
+        <div className="rounded-[20px] bg-[#1a2936] p-6 flex-1">
+          <h3 className="text-white text-[20px] font-bold text-center mb-4">Consumo promedio/hora último mes</h3>
+          <div className="bg-white rounded-[15px] p-4">
+            <p className="text-gray-800 text-sm font-medium mb-2 text-center">Consumo diario promedio por hora</p>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={consumoPorHora} margin={{ top: 10, right: 10, left: -10, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" vertical={false} />
+                <XAxis 
+                  dataKey="hora" 
+                  label={{ value: 'Hora del día', position: 'insideBottom', offset: -10 }}
+                  stroke="#666"
+                  tick={{ fontSize: 11 }}
+                  type="number"
+                  ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]}
+                />
+                <YAxis 
+                  label={{ value: 'Consumo promedio (kWh)', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
+                  stroke="#666"
+                  tick={{ fontSize: 11 }}
+                  domain={[0, 'auto']}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', fontSize: 12 }}
+                  labelFormatter={(value) => `Hora ${value}:00`}
+                  formatter={(value: number) => [`${value.toFixed(2)} kWh`, 'Consumo Promedio']}
+                />
+                <Bar 
+                  dataKey="consumoPromedio" 
+                  fill="#60a5fa"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
         <div className="flex gap-2">
           <div className="rounded-[20px] bg-[#1a2936] p-6 flex-1">
             <h3 className="text-white text-[20px] font-bold text-center mb-4">Consumo por sector</h3>
             <img src="/pie-chart-sectores.png" alt="Consumo por sector" className="w-full h-auto rounded-[15px]" />
-          </div>
-          <div className="rounded-[20px] bg-[#1a2936] p-6 flex-1">
-            <h3 className="text-white text-[20px] font-bold text-center mb-4">Consumo promedio/hora</h3>
-            <img src="/consumo-horas.png" alt="Consumo por hora" className="w-full h-auto rounded-[15px]" />
           </div>
         </div>
       </div>
@@ -306,6 +353,7 @@ export const Index = () => {
           </div>
         </div>
       </div>
+      
     </div>
   )
 }

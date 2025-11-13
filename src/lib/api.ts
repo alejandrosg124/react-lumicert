@@ -546,6 +546,16 @@ export interface ConsumoSectorResponse {
   data: ConsumoSector[]
 }
 
+export interface ConsumoHora {
+  hora: number
+  consumoPromedio: number
+}
+
+export interface ConsumoHoraResponse {
+  success: boolean
+  data: ConsumoHora[]
+}
+
 export interface EstadisticasResponse {
   success: boolean
   data: {
@@ -678,6 +688,22 @@ export const fetchEstadisticas = async (): Promise<EstadisticasResponse> => {
 
   if (!response.ok) {
     throw new Error('Error al obtener las estadísticas')
+  }
+
+  return await response.json()
+}
+
+// Obtener consumo promedio por hora
+export const fetchConsumoPorHora = async (): Promise<ConsumoHoraResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/consumo/por-hora`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el consumo por hora')
   }
 
   return await response.json()

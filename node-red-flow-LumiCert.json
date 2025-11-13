@@ -583,5 +583,96 @@
         "modules": {
             "node-red-node-mongodb": "0.2.5"
         }
+    },
+    {
+        "id": "http_consumo_hora",
+        "type": "http in",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "url": "/api/consumo/por-hora",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 900,
+        "wires": [["func_query_hora"]]
+    },
+    {
+        "id": "func_query_hora",
+        "type": "function",
+        "z": "829727b6e7b7e807",
+        "name": "Query Consumo por Hora",
+        "func": "msg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaSplit: { $split: [\"$fecha\", \"T\"] }\n        }\n    },\n    {\n        $addFields: {\n            timePart: { $arrayElemAt: [\"$fechaSplit\", 1] }\n        }\n    },\n    {\n        $addFields: {\n            timeArray: { $split: [\"$timePart\", \":\"] }\n        }\n    },\n    {\n        $addFields: {\n            hora: { $toInt: { $arrayElemAt: [\"$timeArray\", 0] } }\n        }\n    },\n    {\n        $group: {\n            _id: \"$hora\",\n            totalConsumo: { $sum: \"$consumo\" },\n            count: { $sum: 1 }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            hora: \"$_id\",\n            consumoPromedio: { $divide: [\"$totalConsumo\", \"$count\"] }\n        }\n    },\n    {\n        $sort: { hora: 1 }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 420,
+        "y": 900,
+        "wires": [["mongo_consumo_hora"]]
+    },
+    {
+        "id": "mongo_consumo_hora",
+        "type": "mongodb in",
+        "z": "829727b6e7b7e807",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 660,
+        "y": 900,
+        "wires": [["func_format_hora"]]
+    },
+    {
+        "id": "func_format_hora",
+        "type": "function",
+        "z": "829727b6e7b7e807",
+        "name": "Formatear Respuesta",
+        "func": "msg.payload = {\n    success: true,\n    data: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 880,
+        "y": 900,
+        "wires": [["http_response_hora"]]
+    },
+    {
+        "id": "http_response_hora",
+        "type": "http response",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+        },
+        "x": 1090,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "http_options_hora",
+        "type": "http in",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "url": "/api/consumo/por-hora",
+        "method": "options",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 960,
+        "wires": [["http_options_response_hora"]]
+    },
+    {
+        "id": "http_options_response_hora",
+        "type": "http response",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "statusCode": "204",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        },
+        "x": 450,
+        "y": 960,
+        "wires": []
     }
 ]
