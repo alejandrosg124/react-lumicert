@@ -1,4 +1,84 @@
+import { useEffect, useState } from 'react'
+import { 
+  fetchConsumoTotalMes, 
+  fetchConsumoMesAnterior, 
+  fetchSectores, 
+  fetchNotificaciones,
+  fetchEstadisticas,
+  type ConsumoTotalMesResponse,
+  type ConsumoMesAnteriorResponse,
+  type SectoresResponse,
+  type NotificacionesResponse,
+  type EstadisticasResponse
+} from '../lib/api'
+
 export const Index = () => {
+  const [consumoMes, setConsumoMes] = useState<ConsumoTotalMesResponse['data'] | null>(null)
+  const [consumoAnterior, setConsumoAnterior] = useState<ConsumoMesAnteriorResponse['data'] | null>(null)
+  const [sectores, setSectores] = useState<SectoresResponse['data']>([])
+  const [notificaciones, setNotificaciones] = useState<NotificacionesResponse['data']>([])
+  const [estadisticas, setEstadisticas] = useState<EstadisticasResponse['data'] | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        console.log('Iniciando carga de datos...')
+        
+        const [
+          consumoMesData,
+          consumoAnteriorData,
+          sectoresData,
+          notificacionesData,
+          estadisticasData
+        ] = await Promise.all([
+          fetchConsumoTotalMes(),
+          fetchConsumoMesAnterior(),
+          fetchSectores(),
+          fetchNotificaciones(),
+          fetchEstadisticas()
+        ])
+
+        console.log('Datos recibidos:', {
+          consumoMes: consumoMesData,
+          consumoAnterior: consumoAnteriorData,
+          sectores: sectoresData,
+          notificaciones: notificacionesData,
+          estadisticas: estadisticasData
+        })
+
+        setConsumoMes(consumoMesData.data)
+        setConsumoAnterior(consumoAnteriorData.data)
+        setSectores(sectoresData.data)
+        setNotificaciones(notificacionesData.data)
+        setEstadisticas(estadisticasData.data)
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    cargarDatos()
+  }, [])
+
+  // Calcular variación porcentual
+  const calcularVariacion = () => {
+    if (!consumoMes || !consumoAnterior) return 0
+    if (consumoAnterior.consumoMesAnterior === 0) return 0
+    
+    const variacion = ((consumoMes.consumoTotalMes - consumoAnterior.consumoMesAnterior) / consumoAnterior.consumoMesAnterior) * 100
+    return variacion.toFixed(1)
+  }
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen relative bg-[#0a1219] flex items-center justify-center">
+        <div className="text-white text-2xl">Cargando datos...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full min-h-screen relative bg-[#0a1219] p-2 flex gap-2">
       {/* Panel izquierdo - Sectores y Daños */}
@@ -7,20 +87,26 @@ export const Index = () => {
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[28px] font-bold mb-4">Sectores</h2>
           
-          <div className="bg-[#394d5c] rounded-[15px] p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-white text-[20px] font-medium">La Flora</span>
-              <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#ef0000] to-[#8d375f]"></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white text-[20px] font-medium">El Caney</span>
-              <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#ef0000] to-[#8d375f]"></div>
-            </div>
+          <div className="bg-[#394d5c] rounded-[15px] p-4 mb-4 max-h-[200px] overflow-y-auto">
+            {sectores.length > 0 ? (
+              sectores.map((sector, index) => (
+                <div key={sector.id_sector} className={`flex items-center justify-between ${index > 0 ? 'mt-3' : ''}`}>
+                  <span className="text-white text-[20px] font-medium">{sector.nombre_sector}</span>
+                  <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#ef0000] to-[#8d375f]"></div>
+                </div>
+              ))
+            ) : (
+              <div className="text-white text-center text-sm">No hay sectores</div>
+            )}
           </div>
           
           <div className="space-y-2">
-            <div className="text-white text-[22px] font-medium">Total:</div>
-            <div className="text-white text-[22px] font-medium">Funcionando:</div>
+            <div className="text-white text-[22px] font-medium">
+              Total: {estadisticas?.totalLuminarias || 0}
+            </div>
+            <div className="text-white text-[22px] font-medium">
+              Funcionando: {estadisticas?.luminariasFuncionando || 0}
+            </div>
           </div>
         </div>
 
@@ -28,17 +114,26 @@ export const Index = () => {
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[24px] font-bold text-center mb-4">Daños reportados</h2>
           
-          <div className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
-            <div className="w-[40px] h-[40px] rounded-full bg-[#3d5161] flex items-center justify-center text-[24px] flex-shrink-0">
-              📋
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-white text-[15px] font-semibold">Reporte</span>
-                <span className="text-gray-400 text-[14px]">9:41 AM</span>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {notificaciones.slice(0, 3).map((notif) => (
+              <div key={notif._id} className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
+                <div className="w-[40px] h-[40px] rounded-full bg-[#3d5161] flex items-center justify-center text-[24px] flex-shrink-0">
+                  📋
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-white text-[15px] font-semibold">Reporte</span>
+                    <span className="text-gray-400 text-[14px]">{notif.hora}</span>
+                  </div>
+                  <p className="text-white text-[14px] truncate">{notif.descripcion}</p>
+                </div>
               </div>
-              <p className="text-white text-[14px]">Luminaria apagada en La Flora</p>
-            </div>
+            ))}
+            {notificaciones.length === 0 && (
+              <div className="text-white text-center text-sm py-4">
+                No hay reportes de daños
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -49,15 +144,30 @@ export const Index = () => {
         <div className="flex gap-2">
           <div className="rounded-[20px] bg-[#1a2936] p-4 flex-1">
             <h3 className="text-white text-[13px] font-bold text-center mb-2">Consumo Total del Mes (kWh)</h3>
-            <p className="text-gray-400 text-[11px] text-center">350 kWh este mes</p>
+            <p className="text-white text-[24px] font-bold text-center">
+              {consumoMes ? consumoMes.consumoTotalMes.toFixed(2) : '0.00'} kWh
+            </p>
+            <p className="text-gray-400 text-[11px] text-center mt-1">
+              {consumoMes ? `${consumoMes.diasTranscurridos} de ${consumoMes.totalDiasMes} días` : 'Cargando...'}
+            </p>
           </div>
           <div className="rounded-[20px] bg-[#1a2936] p-4 flex-1">
             <h3 className="text-white text-[13px] font-bold text-center mb-2">Consumo Promedio Diario (kWh/día)</h3>
-            <p className="text-gray-400 text-[11px] text-center">11.6 kWh/día</p>
+            <p className="text-white text-[24px] font-bold text-center">
+              {consumoMes ? consumoMes.consumoPromedioDiario.toFixed(2) : '0.00'} kWh/día
+            </p>
+            <p className="text-gray-400 text-[11px] text-center mt-1">
+              {consumoMes ? `Basado en ${consumoMes.mediciones} mediciones` : 'Cargando...'}
+            </p>
           </div>
           <div className="rounded-[20px] bg-[#1a2936] p-4 flex-1">
             <h3 className="text-white text-[13px] font-bold text-center mb-2">Variación vs Mes Anterior (%)</h3>
-            <p className="text-gray-400 text-[11px] text-center">+8% respecto al mes pasado</p>
+            <p className={`text-[24px] font-bold text-center ${Number(calcularVariacion()) >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+              {Number(calcularVariacion()) >= 0 ? '+' : ''}{calcularVariacion()}%
+            </p>
+            <p className="text-gray-400 text-[11px] text-center mt-1">
+              {consumoAnterior ? `${consumoAnterior.consumoMesAnterior.toFixed(2)} kWh el mes pasado` : 'Cargando...'}
+            </p>
           </div>
         </div>
 
@@ -88,48 +198,41 @@ export const Index = () => {
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[24px] font-bold text-center mb-4">Notificaciones Recientes</h2>
           
-          <div className="space-y-3">
-            {/* Notificación 1 */}
-            <div className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
-              <div className="w-[40px] h-[40px] rounded-full bg-yellow-500 flex items-center justify-center text-[24px] flex-shrink-0">
-                ⚠️
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-white text-[15px] font-semibold">Alerta</span>
-                  <span className="text-gray-400 text-[14px]">9:41 AM</span>
-                </div>
-                <p className="text-white text-[14px]">Luminaria 5 del sector 2 dañado..</p>
-              </div>
-            </div>
+          <div className="space-y-3 max-h-[500px] overflow-y-auto">
+            {notificaciones.slice(0, 5).map((notif) => {
+              // Determinar color basado en descripción
+              const getColor = () => {
+                const desc = notif.descripcion.toLowerCase()
+                if (desc.includes('falla') || desc.includes('daño') || desc.includes('crítico')) {
+                  return 'bg-red-500'
+                } else if (desc.includes('alerta') || desc.includes('advertencia')) {
+                  return 'bg-yellow-500'
+                } else {
+                  return 'bg-blue-500'
+                }
+              }
 
-            {/* Notificación 2 */}
-            <div className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
-              <div className="w-[40px] h-[40px] rounded-full bg-red-500 flex items-center justify-center text-[24px] flex-shrink-0">
-                ⚠️
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-white text-[15px] font-semibold">Alerta</span>
-                  <span className="text-gray-400 text-[14px]">9:25 AM</span>
+              return (
+                <div key={notif._id} className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
+                  <div className={`w-[40px] h-[40px] rounded-full ${getColor()} flex items-center justify-center text-[24px] flex-shrink-0`}>
+                    ⚠️
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white text-[15px] font-semibold">Alerta</span>
+                      <span className="text-gray-400 text-[14px]">{notif.hora}</span>
+                    </div>
+                    <p className="text-white text-[14px]">{notif.descripcion.substring(0, 50)}{notif.descripcion.length > 50 ? '..' : ''}</p>
+                  </div>
                 </div>
-                <p className="text-white text-[14px]">Aumento acústico de consumo</p>
-              </div>
-            </div>
+              )
+            })}
 
-            {/* Notificación 3 */}
-            <div className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
-              <div className="w-[40px] h-[40px] rounded-full bg-yellow-500 flex items-center justify-center text-[24px] flex-shrink-0">
-                ⚠️
+            {notificaciones.length === 0 && (
+              <div className="text-white text-center text-sm py-8">
+                No hay notificaciones recientes
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-white text-[15px] font-semibold">Alerta</span>
-                  <span className="text-gray-400 text-[14px]">9:01 AM</span>
-                </div>
-                <p className="text-white text-[14px]">Luminaria 2 del sector 3 prese..</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

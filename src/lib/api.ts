@@ -1,5 +1,5 @@
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4500'
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:1880'
 
 export interface UserResponse {
   id: string
@@ -448,4 +448,237 @@ export const fetchSetPostImages = async (id: string, data: FormData) => {
     console.log(errorData)
     throw new Error(JSON.stringify(errorData))
   }
+}
+
+// ============== LUMICERT API ==============
+
+export interface ConsumoTotalMesResponse {
+  success: boolean
+  data: {
+    consumoTotalMes: number
+    consumoPromedioDiario: number
+    consumoPromedioMes: number
+    mes: number
+    año: number
+    diasTranscurridos: number
+    totalDiasMes: number
+    mediciones: number
+  }
+}
+
+export interface ConsumoMesAnteriorResponse {
+  success: boolean
+  data: {
+    consumoMesAnterior: number
+    mes: number
+    año: number
+  }
+}
+
+export interface Sector {
+  id_sector: string
+  nombre_sector: string
+  direccion?: {
+    latitud: number
+    longitud: number
+  }
+  luminarias?: Array<{
+    id_luminaria: string
+  }>
+}
+
+export interface SectoresResponse {
+  success: boolean
+  data: Sector[]
+}
+
+export interface Luminaria {
+  _id: string
+  id_lum: string
+  id_sector?: string
+  modelo: string
+  ubicacion?: {
+    latitud: number
+    longitud: number
+  }
+}
+
+export interface LuminariasResponse {
+  success: boolean
+  data: Luminaria[]
+  total: number
+}
+
+export interface Notificacion {
+  _id: string
+  id_luminaria: string
+  fecha: string
+  hora: string
+  descripcion: string
+}
+
+export interface NotificacionesResponse {
+  success: boolean
+  data: Notificacion[]
+}
+
+export interface ConsumoDiario {
+  dia: number
+  mes: number
+  año: number
+  consumo: number
+  fecha: string
+}
+
+export interface ConsumoDiarioResponse {
+  success: boolean
+  data: ConsumoDiario[]
+}
+
+export interface ConsumoSector {
+  id_sector: string
+  nombre_sector: string
+  consumo: number
+}
+
+export interface ConsumoSectorResponse {
+  success: boolean
+  data: ConsumoSector[]
+}
+
+export interface EstadisticasResponse {
+  success: boolean
+  data: {
+    totalLuminarias: number
+    luminariasFuncionando: number
+    luminariasConProblemas: number
+  }
+}
+
+// Obtener consumo total del mes
+export const fetchConsumoTotalMes = async (): Promise<ConsumoTotalMesResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/consumo/total-mes`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el consumo total del mes')
+  }
+
+  return await response.json()
+}
+
+// Obtener consumo del mes anterior
+export const fetchConsumoMesAnterior = async (): Promise<ConsumoMesAnteriorResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/consumo/mes-anterior`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el consumo del mes anterior')
+  }
+
+  return await response.json()
+}
+
+// Obtener sectores
+export const fetchSectores = async (): Promise<SectoresResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/sectores`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener los sectores')
+  }
+
+  return await response.json()
+}
+
+// Obtener luminarias
+export const fetchLuminarias = async (): Promise<LuminariasResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/luminarias`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener las luminarias')
+  }
+
+  return await response.json()
+}
+
+// Obtener notificaciones
+export const fetchNotificaciones = async (): Promise<NotificacionesResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/notificaciones`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener las notificaciones')
+  }
+
+  return await response.json()
+}
+
+// Obtener consumo diario
+export const fetchConsumoDiario = async (): Promise<ConsumoDiarioResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/consumo/diario`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el consumo diario')
+  }
+
+  return await response.json()
+}
+
+// Obtener consumo por sector
+export const fetchConsumoPorSector = async (): Promise<ConsumoSectorResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/consumo/por-sector`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el consumo por sector')
+  }
+
+  return await response.json()
+}
+
+// Obtener estadísticas generales
+export const fetchEstadisticas = async (): Promise<EstadisticasResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/estadisticas`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener las estadísticas')
+  }
+
+  return await response.json()
 }
