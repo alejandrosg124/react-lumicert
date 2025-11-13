@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { 
-  fetchConsumoTotalMes, 
-  fetchConsumoMesAnterior, 
-  fetchSectores, 
+import {
+  fetchConsumoTotalMes,
+  fetchConsumoMesAnterior,
+  fetchSectores,
   fetchNotificaciones,
   fetchEstadisticas,
   fetchConsumoDiario,
   fetchConsumoPorHora,
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
-  type SectoresResponse,
   type NotificacionesResponse,
   type EstadisticasResponse,
   type ConsumoDiarioResponse,
   type ConsumoHoraResponse
 } from '../lib/api'
+import { ListaSectores } from '../components/dashboard/ListaSectores'
 
 export const Index = () => {
   const [consumoMes, setConsumoMes] = useState<ConsumoTotalMesResponse['data'] | null>(null)
   const [consumoAnterior, setConsumoAnterior] = useState<ConsumoMesAnteriorResponse['data'] | null>(null)
-  const [sectores, setSectores] = useState<SectoresResponse['data']>([])
   const [notificaciones, setNotificaciones] = useState<NotificacionesResponse['data']>([])
   const [estadisticas, setEstadisticas] = useState<EstadisticasResponse['data'] | null>(null)
   const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
@@ -31,7 +30,6 @@ export const Index = () => {
     const cargarDatos = async () => {
       try {
         console.log('Iniciando carga de datos...')
-        
         const [
           consumoMesData,
           consumoAnteriorData,
@@ -71,7 +69,6 @@ export const Index = () => {
 
         setConsumoMes(consumoMesData.data)
         setConsumoAnterior(consumoAnteriorData.data)
-        setSectores(sectoresData.data)
         setNotificaciones(notificacionesData.data)
         setEstadisticas(estadisticasData.data)
         setConsumoDiario(consumoDiarioData.data)
@@ -90,7 +87,7 @@ export const Index = () => {
   const calcularVariacion = () => {
     if (!consumoMes || !consumoAnterior) return 0
     if (consumoAnterior.consumoMesAnterior === 0) return 0
-    
+
     const variacion = ((consumoMes.consumoTotalMes - consumoAnterior.consumoMesAnterior) / consumoAnterior.consumoMesAnterior) * 100
     return variacion.toFixed(1)
   }
@@ -108,36 +105,12 @@ export const Index = () => {
       {/* Panel izquierdo - Sectores y Daños */}
       <div className="w-[290px] flex flex-col gap-2">
         {/* Sectores */}
-        <div className="rounded-[20px] bg-[#1a2936] p-6">
-          <h2 className="text-white text-[28px] font-bold mb-4">Sectores</h2>
-          
-          <div className="bg-[#394d5c] rounded-[15px] p-4 mb-4 max-h-[200px] overflow-y-auto">
-            {sectores.length > 0 ? (
-              sectores.map((sector, index) => (
-                <div key={sector.id_sector} className={`flex items-center justify-between ${index > 0 ? 'mt-3' : ''}`}>
-                  <span className="text-white text-[20px] font-medium">{sector.nombre_sector}</span>
-                  <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-b from-[#ef0000] to-[#8d375f]"></div>
-                </div>
-              ))
-            ) : (
-              <div className="text-white text-center text-sm">No hay sectores</div>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <div className="text-white text-[22px] font-medium">
-              Total: {estadisticas?.totalLuminarias || 0}
-            </div>
-            <div className="text-white text-[22px] font-medium">
-              Funcionando: {estadisticas?.luminariasFuncionando || 0}
-            </div>
-          </div>
-        </div>
+        <ListaSectores />
 
         {/* Daños reportados */}
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[24px] font-bold text-center mb-4">Daños reportados</h2>
-          
+
           <div className="space-y-3 max-h-[300px] overflow-y-auto">
             {notificaciones.slice(0, 3).map((notif) => (
               <div key={notif._id} className="bg-[#2a3d4d] rounded-[20px] p-4 flex items-start gap-3">
@@ -203,8 +176,8 @@ export const Index = () => {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={consumoDiario} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis 
-                  dataKey="dia" 
+                <XAxis
+                  dataKey="dia"
                   label={{ value: 'Día del mes', position: 'insideBottom', offset: -10 }}
                   stroke="#666"
                   tick={{ fontSize: 12 }}
@@ -212,21 +185,21 @@ export const Index = () => {
                   type="number"
                   ticks={[1, 5, 10, 15, 20, 25, 30]}
                 />
-                <YAxis 
+                <YAxis
                   label={{ value: 'Consumo (kWh)', angle: -90, position: 'insideLeft' }}
                   stroke="#666"
                   tick={{ fontSize: 12 }}
                   domain={[0, 'auto']}
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
                   labelFormatter={(value) => `Día ${value}`}
                   formatter={(value: number) => [`${value.toFixed(2)} kWh`, 'Consumo']}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="consumo" 
-                  stroke="#f59e0b" 
+                <Line
+                  type="monotone"
+                  dataKey="consumo"
+                  stroke="#f59e0b"
                   strokeWidth={2}
                   dot={{ fill: '#f59e0b', r: 4 }}
                   activeDot={{ r: 6 }}
@@ -285,7 +258,7 @@ export const Index = () => {
         {/* Notificaciones Recientes */}
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[24px] font-bold text-center mb-4">Notificaciones Recientes</h2>
-          
+
           <div className="space-y-3 max-h-[500px] overflow-y-auto">
             {notificaciones.slice(0, 5).map((notif) => {
               // Determinar color basado en descripción
@@ -327,7 +300,7 @@ export const Index = () => {
         {/* Precios */}
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[24px] font-bold text-center mb-6">Precios</h2>
-          
+
           <div className="space-y-4">
             {/* Precio Actual */}
             <div className="bg-[#394d5c] border border-gray-600 rounded-lg p-6">
