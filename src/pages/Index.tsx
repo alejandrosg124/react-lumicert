@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { 
   fetchConsumoTotalMes, 
   fetchConsumoMesAnterior, 
   fetchSectores, 
   fetchNotificaciones,
   fetchEstadisticas,
+  fetchConsumoDiario,
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
   type SectoresResponse,
   type NotificacionesResponse,
-  type EstadisticasResponse
+  type EstadisticasResponse,
+  type ConsumoDiarioResponse
 } from '../lib/api'
 
 export const Index = () => {
@@ -18,6 +21,7 @@ export const Index = () => {
   const [sectores, setSectores] = useState<SectoresResponse['data']>([])
   const [notificaciones, setNotificaciones] = useState<NotificacionesResponse['data']>([])
   const [estadisticas, setEstadisticas] = useState<EstadisticasResponse['data'] | null>(null)
+  const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,13 +34,15 @@ export const Index = () => {
           consumoAnteriorData,
           sectoresData,
           notificacionesData,
-          estadisticasData
+          estadisticasData,
+          consumoDiarioData
         ] = await Promise.all([
           fetchConsumoTotalMes(),
           fetchConsumoMesAnterior(),
           fetchSectores(),
           fetchNotificaciones(),
-          fetchEstadisticas()
+          fetchEstadisticas(),
+          fetchConsumoDiario()
         ])
 
         console.log('Datos recibidos:', {
@@ -44,7 +50,8 @@ export const Index = () => {
           consumoAnterior: consumoAnteriorData,
           sectores: sectoresData,
           notificaciones: notificacionesData,
-          estadisticas: estadisticasData
+          estadisticas: estadisticasData,
+          consumoDiario: consumoDiarioData
         })
 
         setConsumoMes(consumoMesData.data)
@@ -52,6 +59,7 @@ export const Index = () => {
         setSectores(sectoresData.data)
         setNotificaciones(notificacionesData.data)
         setEstadisticas(estadisticasData.data)
+        setConsumoDiario(consumoDiarioData.data)
       } catch (error) {
         console.error('Error al cargar datos:', error)
       } finally {
@@ -175,7 +183,40 @@ export const Index = () => {
         <div className="rounded-[20px] bg-[#1a2936] p-6">
           <h2 className="text-white text-[28px] font-bold text-center mb-4">Consumo mensual</h2>
           <div className="bg-white rounded-[15px] p-4">
-            <img src="/consumo-diario.svg" alt="Consumo diario" className="w-full h-auto" />
+            <p className="text-gray-800 text-sm font-medium mb-2">Consumo de Energía Diario (kWh) - Mes de Prueba</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={consumoDiario} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis 
+                  dataKey="dia" 
+                  label={{ value: 'Día del mes', position: 'insideBottom', offset: -10 }}
+                  stroke="#666"
+                  tick={{ fontSize: 12 }}
+                  domain={[1, 31]}
+                  type="number"
+                  ticks={[1, 5, 10, 15, 20, 25, 30]}
+                />
+                <YAxis 
+                  label={{ value: 'Consumo (kWh)', angle: -90, position: 'insideLeft' }}
+                  stroke="#666"
+                  tick={{ fontSize: 12 }}
+                  domain={[0, 'auto']}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
+                  labelFormatter={(value) => `Día ${value}`}
+                  formatter={(value: number) => [`${value.toFixed(2)} kWh`, 'Consumo']}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="consumo" 
+                  stroke="#f59e0b" 
+                  strokeWidth={2}
+                  dot={{ fill: '#f59e0b', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

@@ -323,8 +323,8 @@
         "id": "ed76c7a062c2f975",
         "type": "function",
         "z": "829727b6e7b7e807",
-        "name": "Count Luminarias",
-        "func": "msg.collection = 'luminarias';\nmsg.payload = {};\nreturn msg;",
+        "name": "Query Estadísticas",
+        "func": "// Agregación para obtener última medición de cada luminaria\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $sort: { id_luminaria: 1, fechaDate: -1 }\n    },\n    {\n        $group: {\n            _id: \"$id_luminaria\",\n            ultimaFalla: { $first: \"$falla\" },\n            ultimaFecha: { $first: \"$fechaDate\" }\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            total: { $sum: 1 },\n            conFalla: {\n                $sum: {\n                    $cond: [{ $eq: [\"$ultimaFalla\", true] }, 1, 0]\n                }\n            }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 360,
@@ -342,7 +342,7 @@
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
-        "operation": "find",
+        "operation": "aggregate",
         "x": 590,
         "y": 340,
         "wires": [
@@ -356,7 +356,7 @@
         "type": "function",
         "z": "829727b6e7b7e807",
         "name": "Formatear Estadísticas",
-        "func": "const total = msg.payload ? msg.payload.length : 0;\nconst funcionando = Math.floor(total * 0.85);\n\nmsg.payload = {\n    success: true,\n    data: {\n        totalLuminarias: total,\n        luminariasFuncionando: funcionando,\n        luminariasConProblemas: total - funcionando\n    }\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
+        "func": "let total = 0;\nlet conProblemas = 0;\n\nif (msg.payload && msg.payload.length > 0) {\n    const data = msg.payload[0];\n    total = data.total || 0;\n    conProblemas = data.conFalla || 0;\n}\n\nconst funcionando = total - conProblemas;\n\nmsg.payload = {\n    success: true,\n    data: {\n        totalLuminarias: total,\n        luminariasFuncionando: funcionando,\n        luminariasConProblemas: conProblemas\n    }\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 820,
@@ -490,6 +490,80 @@
         "name": "",
         "x": 650,
         "y": 460,
+        "wires": []
+    },
+    {
+        "id": "http_consumo_diario",
+        "type": "http in",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "url": "/api/consumo/diario",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 520,
+        "wires": [
+            [
+                "func_query_diario"
+            ]
+        ]
+    },
+    {
+        "id": "func_query_diario",
+        "type": "function",
+        "z": "829727b6e7b7e807",
+        "name": "Query Consumo Diario",
+        "func": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\n\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" },\n            dia: { $dayOfMonth: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: month,\n            anio: year\n        }\n    },\n    {\n        $group: {\n            _id: \"$dia\",\n            consumoTotal: { $sum: \"$consumo\" }\n        }\n    },\n    {\n        $sort: { _id: 1 }\n    },\n    {\n        $project: {\n            _id: 0,\n            dia: \"$_id\",\n            consumo: { $round: [\"$consumoTotal\", 3] }\n        }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 420,
+        "y": 520,
+        "wires": [
+            [
+                "mongo_consumo_diario"
+            ]
+        ]
+    },
+    {
+        "id": "mongo_consumo_diario",
+        "type": "mongodb in",
+        "z": "829727b6e7b7e807",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 680,
+        "y": 520,
+        "wires": [
+            [
+                "func_format_diario"
+            ]
+        ]
+    },
+    {
+        "id": "func_format_diario",
+        "type": "function",
+        "z": "829727b6e7b7e807",
+        "name": "Formatear Consumo Diario",
+        "func": "msg.payload = {\n    success: true,\n    data: msg.payload || []\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 920,
+        "y": 520,
+        "wires": [
+            [
+                "http_response_diario"
+            ]
+        ]
+    },
+    {
+        "id": "http_response_diario",
+        "type": "http response",
+        "z": "829727b6e7b7e807",
+        "name": "",
+        "x": 1130,
+        "y": 520,
         "wires": []
     },
     {
