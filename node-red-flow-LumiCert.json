@@ -1,15 +1,15 @@
 [
     {
-        "id": "829727b6e7b7e807",
+        "id": "763063e50cb62a57",
         "type": "tab",
         "label": "LumiCert API",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "a789ff9edf460833",
+        "id": "c0a56a5a40c88ce6",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/consumo/total-mes",
         "method": "get",
@@ -19,14 +19,14 @@
         "y": 100,
         "wires": [
             [
-                "3448fbfe72fb6c28"
+                "e2c2a2b6404d8798"
             ]
         ]
     },
     {
-        "id": "3448fbfe72fb6c28",
+        "id": "e2c2a2b6404d8798",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Preparar Query",
         "func": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\nconst daysInMonth = new Date(year, month, 0).getDate();\nconst currentDay = now.getDate();\n\nflow.set('year', year);\nflow.set('month', month);\nflow.set('daysInMonth', daysInMonth);\nflow.set('currentDay', currentDay);\n\n// Query que maneja fechas con y sin timezone\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: month,\n            anio: year\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalConsumo: { $sum: \"$consumo\" },\n            count: { $sum: 1 }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
@@ -35,14 +35,14 @@
         "y": 100,
         "wires": [
             [
-                "ceda4f4d60fe407a"
+                "f9789a983f340c45"
             ]
         ]
     },
     {
-        "id": "ceda4f4d60fe407a",
+        "id": "f9789a983f340c45",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -51,14 +51,14 @@
         "y": 100,
         "wires": [
             [
-                "f68881b52f9e7637"
+                "a3d24c6637fcde2e"
             ]
         ]
     },
     {
-        "id": "f68881b52f9e7637",
+        "id": "a3d24c6637fcde2e",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear Respuesta",
         "func": "const year = flow.get('year');\nconst month = flow.get('month');\nconst daysInMonth = flow.get('daysInMonth');\nconst currentDay = flow.get('currentDay');\n\nif (msg.payload && msg.payload.length > 0) {\n    const data = msg.payload[0];\n    const totalConsumo = data.totalConsumo || 0;\n    const promedioMes = totalConsumo / daysInMonth;\n    const promedioDiario = totalConsumo / currentDay;\n    \n    msg.payload = {\n        success: true,\n        data: {\n            consumoTotalMes: parseFloat(totalConsumo.toFixed(3)),\n            consumoPromedioDiario: parseFloat(promedioDiario.toFixed(3)),\n            consumoPromedioMes: parseFloat(promedioMes.toFixed(3)),\n            mes: month,\n            año: year,\n            diasTranscurridos: currentDay,\n            totalDiasMes: daysInMonth,\n            mediciones: data.count\n        }\n    };\n} else {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoTotalMes: 0,\n            consumoPromedioDiario: 0,\n            consumoPromedioMes: 0,\n            mes: month,\n            año: year,\n            diasTranscurridos: currentDay,\n            totalDiasMes: daysInMonth,\n            mediciones: 0\n        }\n    };\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -67,23 +67,23 @@
         "y": 100,
         "wires": [
             [
-                "36b87b70047a7682"
+                "2e214152e0c3eee5"
             ]
         ]
     },
     {
-        "id": "36b87b70047a7682",
+        "id": "2e214152e0c3eee5",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1090,
         "y": 100,
         "wires": []
     },
     {
-        "id": "14f9227802fa93ad",
+        "id": "7c37ad8ca363e250",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/sectores",
         "method": "get",
@@ -93,14 +93,14 @@
         "y": 160,
         "wires": [
             [
-                "7fb44d59c7857807"
+                "b7bfa88ea563c1a6"
             ]
         ]
     },
     {
-        "id": "7fb44d59c7857807",
+        "id": "b7bfa88ea563c1a6",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Sectores",
         "func": "msg.collection = 'sector';\nmsg.payload = {};\nreturn msg;",
         "outputs": 1,
@@ -109,14 +109,14 @@
         "y": 160,
         "wires": [
             [
-                "b75a5b7a57b86282"
+                "db8520db44804a70"
             ]
         ]
     },
     {
-        "id": "b75a5b7a57b86282",
+        "id": "db8520db44804a70",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -125,14 +125,14 @@
         "y": 160,
         "wires": [
             [
-                "3f3c0a13e268ca52"
+                "89078854767f3110"
             ]
         ]
     },
     {
-        "id": "3f3c0a13e268ca52",
+        "id": "89078854767f3110",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear",
         "func": "msg.payload = {\n    success: true,\n    data: msg.payload || []\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -141,23 +141,23 @@
         "y": 160,
         "wires": [
             [
-                "5057480295440dd0"
+                "201286263aea61b8"
             ]
         ]
     },
     {
-        "id": "5057480295440dd0",
+        "id": "201286263aea61b8",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 990,
         "y": 160,
         "wires": []
     },
     {
-        "id": "03dbdeeae09492c3",
+        "id": "f9bbb3fcd17e0ca5",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/luminarias",
         "method": "get",
@@ -167,14 +167,14 @@
         "y": 220,
         "wires": [
             [
-                "4dad1c7c014507b5"
+                "0dbb4a1cec064a93"
             ]
         ]
     },
     {
-        "id": "4dad1c7c014507b5",
+        "id": "0dbb4a1cec064a93",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Luminarias",
         "func": "msg.collection = 'luminarias';\nmsg.payload = {};\nreturn msg;",
         "outputs": 1,
@@ -183,14 +183,14 @@
         "y": 220,
         "wires": [
             [
-                "8cf3212dc2f80696"
+                "6da768667cae132e"
             ]
         ]
     },
     {
-        "id": "8cf3212dc2f80696",
+        "id": "6da768667cae132e",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -199,14 +199,14 @@
         "y": 220,
         "wires": [
             [
-                "e485739ae4fc361f"
+                "c186cec5810cc915"
             ]
         ]
     },
     {
-        "id": "e485739ae4fc361f",
+        "id": "c186cec5810cc915",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear",
         "func": "msg.payload = {\n    success: true,\n    data: msg.payload || [],\n    total: msg.payload ? msg.payload.length : 0\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -215,23 +215,23 @@
         "y": 220,
         "wires": [
             [
-                "abf3b06c7b4879bb"
+                "cda0591a7187b40d"
             ]
         ]
     },
     {
-        "id": "abf3b06c7b4879bb",
+        "id": "cda0591a7187b40d",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1010,
         "y": 220,
         "wires": []
     },
     {
-        "id": "970c5cf9a1e70a94",
+        "id": "8d74e86c7c5f412d",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/notificaciones",
         "method": "get",
@@ -241,14 +241,14 @@
         "y": 280,
         "wires": [
             [
-                "4b5681b1d665a838"
+                "88ce4dba40b1d994"
             ]
         ]
     },
     {
-        "id": "4b5681b1d665a838",
+        "id": "88ce4dba40b1d994",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Notificaciones",
         "func": "msg.collection = 'notificacion';\nmsg.payload = {};\nmsg.limit = 10;\nmsg.sort = { fecha: -1 };\nreturn msg;",
         "outputs": 1,
@@ -257,14 +257,14 @@
         "y": 280,
         "wires": [
             [
-                "80dfc721c1cb233f"
+                "88a0368380d59815"
             ]
         ]
     },
     {
-        "id": "80dfc721c1cb233f",
+        "id": "88a0368380d59815",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -273,14 +273,14 @@
         "y": 280,
         "wires": [
             [
-                "8d5983425d9520fa"
+                "ecad8ca272d1f0ec"
             ]
         ]
     },
     {
-        "id": "8d5983425d9520fa",
+        "id": "ecad8ca272d1f0ec",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear",
         "func": "const sortedData = (msg.payload || []).sort((a, b) => {\n    return new Date(b.fecha) - new Date(a.fecha);\n}).slice(0, 10);\n\nmsg.payload = {\n    success: true,\n    data: sortedData\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -289,23 +289,23 @@
         "y": 280,
         "wires": [
             [
-                "bc14164f8145cd06"
+                "05a81135badf1979"
             ]
         ]
     },
     {
-        "id": "bc14164f8145cd06",
+        "id": "05a81135badf1979",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1050,
         "y": 280,
         "wires": []
     },
     {
-        "id": "4710a2d4a682d402",
+        "id": "99a1e43304354408",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/estadisticas",
         "method": "get",
@@ -315,14 +315,14 @@
         "y": 340,
         "wires": [
             [
-                "ed76c7a062c2f975"
+                "fd3a08f12745f63c"
             ]
         ]
     },
     {
-        "id": "ed76c7a062c2f975",
+        "id": "fd3a08f12745f63c",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Estadísticas",
         "func": "// Agregación para obtener última medición de cada luminaria\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $sort: { id_luminaria: 1, fechaDate: -1 }\n    },\n    {\n        $group: {\n            _id: \"$id_luminaria\",\n            ultimaFalla: { $first: \"$falla\" },\n            ultimaFecha: { $first: \"$fechaDate\" }\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            total: { $sum: 1 },\n            conFalla: {\n                $sum: {\n                    $cond: [{ $eq: [\"$ultimaFalla\", true] }, 1, 0]\n                }\n            }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
@@ -331,14 +331,14 @@
         "y": 340,
         "wires": [
             [
-                "05b7a8795ced5513"
+                "1fbc557ed613e75b"
             ]
         ]
     },
     {
-        "id": "05b7a8795ced5513",
+        "id": "1fbc557ed613e75b",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -347,14 +347,14 @@
         "y": 340,
         "wires": [
             [
-                "6683b96d9b4e8f32"
+                "5ae8ec3e09096ce8"
             ]
         ]
     },
     {
-        "id": "6683b96d9b4e8f32",
+        "id": "5ae8ec3e09096ce8",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear Estadísticas",
         "func": "let total = 0;\nlet conProblemas = 0;\n\nif (msg.payload && msg.payload.length > 0) {\n    const data = msg.payload[0];\n    total = data.total || 0;\n    conProblemas = data.conFalla || 0;\n}\n\nconst funcionando = total - conProblemas;\n\nmsg.payload = {\n    success: true,\n    data: {\n        totalLuminarias: total,\n        luminariasFuncionando: funcionando,\n        luminariasConProblemas: conProblemas\n    }\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -363,23 +363,23 @@
         "y": 340,
         "wires": [
             [
-                "af31122d120f1d13"
+                "57d1dc668d3de407"
             ]
         ]
     },
     {
-        "id": "af31122d120f1d13",
+        "id": "57d1dc668d3de407",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1050,
         "y": 340,
         "wires": []
     },
     {
-        "id": "460f28282e557f67",
+        "id": "0c1777255038df5b",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/consumo/mes-anterior",
         "method": "get",
@@ -389,14 +389,14 @@
         "y": 400,
         "wires": [
             [
-                "63ab2a1848049fea"
+                "bd683e095a8f6b9a"
             ]
         ]
     },
     {
-        "id": "63ab2a1848049fea",
+        "id": "bd683e095a8f6b9a",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Mes Anterior",
         "func": "const now = new Date();\nconst lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();\nconst lastYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();\n\nflow.set('lastMonth', lastMonth);\nflow.set('lastYear', lastYear);\n\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: lastMonth,\n            anio: lastYear\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalConsumo: { $sum: \"$consumo\" }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
@@ -405,14 +405,14 @@
         "y": 400,
         "wires": [
             [
-                "2891fc5fe174958a"
+                "ad213da1eb340189"
             ]
         ]
     },
     {
-        "id": "2891fc5fe174958a",
+        "id": "ad213da1eb340189",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -421,14 +421,14 @@
         "y": 400,
         "wires": [
             [
-                "8ce9778b927447b1"
+                "a1c77c08ca01861d"
             ]
         ]
     },
     {
-        "id": "8ce9778b927447b1",
+        "id": "a1c77c08ca01861d",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear",
         "func": "const lastMonth = flow.get('lastMonth');\nconst lastYear = flow.get('lastYear');\n\nif (msg.payload && msg.payload.length > 0) {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoMesAnterior: parseFloat(msg.payload[0].totalConsumo.toFixed(3)),\n            mes: lastMonth,\n            año: lastYear\n        }\n    };\n} else {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoMesAnterior: 0,\n            mes: lastMonth,\n            año: lastYear\n        }\n    };\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -437,23 +437,23 @@
         "y": 400,
         "wires": [
             [
-                "62e6489c546b4cb4"
+                "a46a896c32c928f8"
             ]
         ]
     },
     {
-        "id": "62e6489c546b4cb4",
+        "id": "a46a896c32c928f8",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1050,
         "y": 400,
         "wires": []
     },
     {
-        "id": "1cd63be2408bf5d8",
+        "id": "f7d3bd94c3d18d1b",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/*",
         "method": "options",
@@ -463,14 +463,14 @@
         "y": 460,
         "wires": [
             [
-                "dfc939b701c9dea2"
+                "253b06ffa17dd51a"
             ]
         ]
     },
     {
-        "id": "dfc939b701c9dea2",
+        "id": "253b06ffa17dd51a",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "CORS Headers",
         "func": "msg.statusCode = 200;\nmsg.headers = {\n    'Access-Control-Allow-Origin': '*',\n    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',\n    'Access-Control-Allow-Headers': 'Content-Type, Authorization'\n};\nmsg.payload = '';\n\nreturn msg;",
         "outputs": 1,
@@ -479,23 +479,23 @@
         "y": 460,
         "wires": [
             [
-                "62273a3648a972de"
+                "06ecedeb5c798d30"
             ]
         ]
     },
     {
-        "id": "62273a3648a972de",
+        "id": "06ecedeb5c798d30",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 650,
         "y": 460,
         "wires": []
     },
     {
-        "id": "http_consumo_diario",
+        "id": "3820c61819188d18",
         "type": "http in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "url": "/api/consumo/diario",
         "method": "get",
@@ -505,14 +505,14 @@
         "y": 520,
         "wires": [
             [
-                "func_query_diario"
+                "76e19772ba58a9d8"
             ]
         ]
     },
     {
-        "id": "func_query_diario",
+        "id": "76e19772ba58a9d8",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Query Consumo Diario",
         "func": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\n\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" },\n            dia: { $dayOfMonth: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: month,\n            anio: year\n        }\n    },\n    {\n        $group: {\n            _id: \"$dia\",\n            consumoTotal: { $sum: \"$consumo\" }\n        }\n    },\n    {\n        $sort: { _id: 1 }\n    },\n    {\n        $project: {\n            _id: 0,\n            dia: \"$_id\",\n            consumo: { $round: [\"$consumoTotal\", 3] }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
@@ -521,14 +521,14 @@
         "y": 520,
         "wires": [
             [
-                "mongo_consumo_diario"
+                "bd1c3db73b78784e"
             ]
         ]
     },
     {
-        "id": "mongo_consumo_diario",
+        "id": "bd1c3db73b78784e",
         "type": "mongodb in",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
@@ -537,14 +537,14 @@
         "y": 520,
         "wires": [
             [
-                "func_format_diario"
+                "35eb8c26a188c814"
             ]
         ]
     },
     {
-        "id": "func_format_diario",
+        "id": "35eb8c26a188c814",
         "type": "function",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "Formatear Consumo Diario",
         "func": "msg.payload = {\n    success: true,\n    data: msg.payload || []\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
@@ -553,17 +553,239 @@
         "y": 520,
         "wires": [
             [
-                "http_response_diario"
+                "89630b9ce5e831b2"
             ]
         ]
     },
     {
-        "id": "http_response_diario",
+        "id": "89630b9ce5e831b2",
         "type": "http response",
-        "z": "829727b6e7b7e807",
+        "z": "763063e50cb62a57",
         "name": "",
         "x": 1130,
         "y": 520,
+        "wires": []
+    },
+    {
+        "id": "f13669f50d97f12b",
+        "type": "http in",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "url": "/api/consumo/por-hora",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 900,
+        "wires": [
+            [
+                "bc02e8cbd859217b"
+            ]
+        ]
+    },
+    {
+        "id": "bc02e8cbd859217b",
+        "type": "function",
+        "z": "763063e50cb62a57",
+        "name": "Query Consumo por Hora",
+        "func": "msg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaSplit: { $split: [\"$fecha\", \"T\"] }\n        }\n    },\n    {\n        $addFields: {\n            timePart: { $arrayElemAt: [\"$fechaSplit\", 1] }\n        }\n    },\n    {\n        $addFields: {\n            timeArray: { $split: [\"$timePart\", \":\"] }\n        }\n    },\n    {\n        $addFields: {\n            hora: { $toInt: { $arrayElemAt: [\"$timeArray\", 0] } }\n        }\n    },\n    {\n        $group: {\n            _id: \"$hora\",\n            totalConsumo: { $sum: \"$consumo\" },\n            count: { $sum: 1 }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            hora: \"$_id\",\n            consumoPromedio: { $divide: [\"$totalConsumo\", \"$count\"] }\n        }\n    },\n    {\n        $sort: { hora: 1 }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 420,
+        "y": 900,
+        "wires": [
+            [
+                "fac2576f52d34c48"
+            ]
+        ]
+    },
+    {
+        "id": "fac2576f52d34c48",
+        "type": "mongodb in",
+        "z": "763063e50cb62a57",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 660,
+        "y": 900,
+        "wires": [
+            [
+                "3423e6a4638c4719"
+            ]
+        ]
+    },
+    {
+        "id": "3423e6a4638c4719",
+        "type": "function",
+        "z": "763063e50cb62a57",
+        "name": "Formatear Respuesta",
+        "func": "msg.payload = {\n    success: true,\n    data: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 880,
+        "y": 900,
+        "wires": [
+            [
+                "76d0c45217435ed1"
+            ]
+        ]
+    },
+    {
+        "id": "76d0c45217435ed1",
+        "type": "http response",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+        },
+        "x": 1090,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "d5de761067436942",
+        "type": "http in",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "url": "/api/consumo/por-hora",
+        "method": "options",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 960,
+        "wires": [
+            [
+                "5280231071807e56"
+            ]
+        ]
+    },
+    {
+        "id": "5280231071807e56",
+        "type": "http response",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "statusCode": "204",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        },
+        "x": 450,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "76a308d015ad2ae1",
+        "type": "http in",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "url": "/api/ultima-medicion",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 1020,
+        "wires": [
+            [
+                "f65a84231c6877bc"
+            ]
+        ]
+    },
+    {
+        "id": "f65a84231c6877bc",
+        "type": "function",
+        "z": "763063e50cb62a57",
+        "name": "Query Última Medición",
+        "func": "msg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaSplit: { $split: [\"$fecha\", \"T\"] }\n        }\n    },\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $sort: { fechaDate: -1 }\n    },\n    {\n        $limit: 1\n    },\n    {\n        $project: {\n            _id: 0,\n            fecha: 1,\n            consumo: 1,\n            estado_rele: 1,\n            perdida_energia: 1,\n            falla: 1,\n            sobreconsumo: 1,\n            corriente: 1,\n            voltaje: 1,\n            id_lum: 1\n        }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 420,
+        "y": 1020,
+        "wires": [
+            [
+                "2be925ebf3f8fbe7"
+            ]
+        ]
+    },
+    {
+        "id": "2be925ebf3f8fbe7",
+        "type": "mongodb in",
+        "z": "763063e50cb62a57",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 680,
+        "y": 1020,
+        "wires": [
+            [
+                "0f403599d754380a"
+            ]
+        ]
+    },
+    {
+        "id": "0f403599d754380a",
+        "type": "function",
+        "z": "763063e50cb62a57",
+        "name": "Formatear Respuesta",
+        "func": "const medicion = msg.payload[0] || null;\nmsg.payload = {\n    success: true,\n    data: medicion\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 920,
+        "y": 1020,
+        "wires": [
+            [
+                "ba595373aa35f3fa"
+            ]
+        ]
+    },
+    {
+        "id": "ba595373aa35f3fa",
+        "type": "http response",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "statusCode": "200",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json"
+        },
+        "x": 1150,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "4a31881d37192e3b",
+        "type": "http in",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "url": "/api/ultima-medicion",
+        "method": "options",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 1080,
+        "wires": [
+            [
+                "e0c5765780d8273a"
+            ]
+        ]
+    },
+    {
+        "id": "e0c5765780d8273a",
+        "type": "http response",
+        "z": "763063e50cb62a57",
+        "name": "",
+        "statusCode": "204",
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        },
+        "x": 480,
+        "y": 1080,
         "wires": []
     },
     {
@@ -577,102 +799,11 @@
         "name": "MongoDB Atlas"
     },
     {
-        "id": "e2f68b108e7c53f3",
+        "id": "afeb0526466801d3",
         "type": "global-config",
         "env": [],
         "modules": {
             "node-red-node-mongodb": "0.2.5"
         }
-    },
-    {
-        "id": "http_consumo_hora",
-        "type": "http in",
-        "z": "829727b6e7b7e807",
-        "name": "",
-        "url": "/api/consumo/por-hora",
-        "method": "get",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 180,
-        "y": 900,
-        "wires": [["func_query_hora"]]
-    },
-    {
-        "id": "func_query_hora",
-        "type": "function",
-        "z": "829727b6e7b7e807",
-        "name": "Query Consumo por Hora",
-        "func": "msg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaSplit: { $split: [\"$fecha\", \"T\"] }\n        }\n    },\n    {\n        $addFields: {\n            timePart: { $arrayElemAt: [\"$fechaSplit\", 1] }\n        }\n    },\n    {\n        $addFields: {\n            timeArray: { $split: [\"$timePart\", \":\"] }\n        }\n    },\n    {\n        $addFields: {\n            hora: { $toInt: { $arrayElemAt: [\"$timeArray\", 0] } }\n        }\n    },\n    {\n        $group: {\n            _id: \"$hora\",\n            totalConsumo: { $sum: \"$consumo\" },\n            count: { $sum: 1 }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            hora: \"$_id\",\n            consumoPromedio: { $divide: [\"$totalConsumo\", \"$count\"] }\n        }\n    },\n    {\n        $sort: { hora: 1 }\n    }\n];\n\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 420,
-        "y": 900,
-        "wires": [["mongo_consumo_hora"]]
-    },
-    {
-        "id": "mongo_consumo_hora",
-        "type": "mongodb in",
-        "z": "829727b6e7b7e807",
-        "mongodb": "65016b8d41a78754",
-        "name": "",
-        "collection": "",
-        "operation": "aggregate",
-        "x": 660,
-        "y": 900,
-        "wires": [["func_format_hora"]]
-    },
-    {
-        "id": "func_format_hora",
-        "type": "function",
-        "z": "829727b6e7b7e807",
-        "name": "Formatear Respuesta",
-        "func": "msg.payload = {\n    success: true,\n    data: msg.payload\n};\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 880,
-        "y": 900,
-        "wires": [["http_response_hora"]]
-    },
-    {
-        "id": "http_response_hora",
-        "type": "http response",
-        "z": "829727b6e7b7e807",
-        "name": "",
-        "statusCode": "200",
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": "application/json"
-        },
-        "x": 1090,
-        "y": 900,
-        "wires": []
-    },
-    {
-        "id": "http_options_hora",
-        "type": "http in",
-        "z": "829727b6e7b7e807",
-        "name": "",
-        "url": "/api/consumo/por-hora",
-        "method": "options",
-        "upload": false,
-        "swaggerDoc": "",
-        "x": 180,
-        "y": 960,
-        "wires": [["http_options_response_hora"]]
-    },
-    {
-        "id": "http_options_response_hora",
-        "type": "http response",
-        "z": "829727b6e7b7e807",
-        "name": "",
-        "statusCode": "204",
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization"
-        },
-        "x": 450,
-        "y": 960,
-        "wires": []
     }
 ]

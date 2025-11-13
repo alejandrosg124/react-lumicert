@@ -565,6 +565,23 @@ export interface EstadisticasResponse {
   }
 }
 
+export interface UltimaMedicion {
+  fecha: string
+  consumo: number
+  estado_rele: boolean
+  perdida_energia: boolean
+  falla: boolean
+  sobreconsumo: boolean
+  corriente: number
+  voltaje: number
+  id_lum: number
+}
+
+export interface UltimaMedicionResponse {
+  success: boolean
+  data: UltimaMedicion | null
+}
+
 // Obtener consumo total del mes
 export const fetchConsumoTotalMes = async (): Promise<ConsumoTotalMesResponse> => {
   const response = await fetch(`${API_BASE_URL}/api/consumo/total-mes`, {
@@ -704,6 +721,22 @@ export const fetchConsumoPorHora = async (): Promise<ConsumoHoraResponse> => {
 
   if (!response.ok) {
     throw new Error('Error al obtener el consumo por hora')
+  }
+
+  return await response.json()
+}
+
+// Obtener última medición
+export const fetchUltimaMedicion = async (): Promise<UltimaMedicionResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/ultima-medicion`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener la última medición')
   }
 
   return await response.json()

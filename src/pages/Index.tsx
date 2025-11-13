@@ -8,12 +8,14 @@ import {
   fetchEstadisticas,
   fetchConsumoDiario,
   fetchConsumoPorHora,
+  fetchUltimaMedicion,
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
   type NotificacionesResponse,
   type EstadisticasResponse,
   type ConsumoDiarioResponse,
-  type ConsumoHoraResponse
+  type ConsumoHoraResponse,
+  type UltimaMedicionResponse
 } from '../lib/api'
 import { ListaSectores } from '../components/dashboard/ListaSectores'
 
@@ -24,6 +26,7 @@ export const Index = () => {
   const [estadisticas, setEstadisticas] = useState<EstadisticasResponse['data'] | null>(null)
   const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
   const [consumoPorHora, setConsumoPorHora] = useState<ConsumoHoraResponse['data']>([])
+  const [ultimaMedicion, setUltimaMedicion] = useState<UltimaMedicionResponse['data']>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,7 +40,8 @@ export const Index = () => {
           notificacionesData,
           estadisticasData,
           consumoDiarioData,
-          consumoPorHoraData
+          consumoPorHoraData,
+          ultimaMedicionData
         ] = await Promise.all([
           fetchConsumoTotalMes(),
           fetchConsumoMesAnterior(),
@@ -45,7 +49,8 @@ export const Index = () => {
           fetchNotificaciones(),
           fetchEstadisticas(),
           fetchConsumoDiario(),
-          fetchConsumoPorHora()
+          fetchConsumoPorHora(),
+          fetchUltimaMedicion()
         ])
 
         console.log('Datos recibidos:', {
@@ -55,7 +60,8 @@ export const Index = () => {
           notificaciones: notificacionesData,
           estadisticas: estadisticasData,
           consumoDiario: consumoDiarioData,
-          consumoPorHora: consumoPorHoraData
+          consumoPorHora: consumoPorHoraData,
+          ultimaMedicion: ultimaMedicionData
         })
 
         // Completar horas faltantes con 0
@@ -73,6 +79,7 @@ export const Index = () => {
         setEstadisticas(estadisticasData.data)
         setConsumoDiario(consumoDiarioData.data)
         setConsumoPorHora(horasCompletas)
+        setUltimaMedicion(ultimaMedicionData.data)
       } catch (error) {
         console.error('Error al cargar datos:', error)
       } finally {
@@ -81,6 +88,19 @@ export const Index = () => {
     }
 
     cargarDatos()
+
+    // Actualizar última medición cada 3 segundos
+    const intervalId = setInterval(async () => {
+      try {
+        const ultimaMedicionData = await fetchUltimaMedicion()
+        setUltimaMedicion(ultimaMedicionData.data)
+      } catch (error) {
+        console.error('Error al actualizar última medición:', error)
+      }
+    }, 3000)
+
+    // Limpiar intervalo al desmontar el componente
+    return () => clearInterval(intervalId)
   }, [])
 
   // Calcular variación porcentual
@@ -132,6 +152,74 @@ export const Index = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Última Medición */}
+        <div className="rounded-[20px] bg-[#1a2936] p-6">
+          <h2 className="text-white text-[24px] font-bold text-center mb-4">Última Medición</h2>
+
+          {ultimaMedicion ? (
+            <div className="space-y-3">
+              <div className="bg-[#2a3d4d] rounded-[15px] p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Luminaria</p>
+                    <p className="text-white text-[16px] font-semibold">#{ultimaMedicion.id_lum}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Fecha/Hora</p>
+                    <p className="text-white text-[12px]">
+                      {new Date(ultimaMedicion.fecha).toLocaleString('es-CO', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#2a3d4d] rounded-[15px] p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Consumo</p>
+                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.consumo.toFixed(3)} kWh</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Corriente</p>
+                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.corriente.toFixed(2)} A</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Voltaje</p>
+                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.voltaje.toFixed(2)} V</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[12px] mb-1">Estado</p>
+                    <div className="flex gap-1 flex-wrap">
+                      {ultimaMedicion.falla && (
+                        <span className="text-[10px] bg-red-500 text-white px-2 py-1 rounded">Falla</span>
+                      )}
+                      {ultimaMedicion.sobreconsumo && (
+                        <span className="text-[10px] bg-yellow-500 text-white px-2 py-1 rounded">Sobreconsumo</span>
+                      )}
+                      {ultimaMedicion.perdida_energia && (
+                        <span className="text-[10px] bg-orange-500 text-white px-2 py-1 rounded">Pérdida</span>
+                      )}
+                      {!ultimaMedicion.falla && !ultimaMedicion.sobreconsumo && !ultimaMedicion.perdida_energia && (
+                        <span className="text-[10px] bg-green-500 text-white px-2 py-1 rounded">Normal</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-white text-center text-sm py-8">
+              No hay mediciones disponibles
+            </div>
+          )}
         </div>
       </div>
 
