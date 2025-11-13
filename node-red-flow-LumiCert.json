@@ -1,15 +1,15 @@
 [
     {
-        "id": "223e019f8995e6c5",
+        "id": "829727b6e7b7e807",
         "type": "tab",
         "label": "LumiCert API",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "432e45ab82d21aff",
+        "id": "a789ff9edf460833",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/consumo/total-mes",
         "method": "get",
@@ -17,375 +17,479 @@
         "swaggerDoc": "",
         "x": 180,
         "y": 100,
-        "wires": [["c968806111769928"]]
+        "wires": [
+            [
+                "3448fbfe72fb6c28"
+            ]
+        ]
     },
     {
-        "id": "c968806111769928",
+        "id": "3448fbfe72fb6c28",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Preparar Query",
         "func": "const now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\nconst daysInMonth = new Date(year, month, 0).getDate();\nconst currentDay = now.getDate();\n\nflow.set('year', year);\nflow.set('month', month);\nflow.set('daysInMonth', daysInMonth);\nflow.set('currentDay', currentDay);\n\n// Query que maneja fechas con y sin timezone\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: month,\n            anio: year\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalConsumo: { $sum: \"$consumo\" },\n            count: { $sum: 1 }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 400,
         "y": 100,
-        "wires": [["59f2374a3d83f5c9"]]
+        "wires": [
+            [
+                "ceda4f4d60fe407a"
+            ]
+        ]
     },
     {
-        "id": "59f2374a3d83f5c9",
+        "id": "ceda4f4d60fe407a",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "aggregate",
         "x": 640,
         "y": 100,
-        "wires": [["b2ad079d7b6912ed"]]
+        "wires": [
+            [
+                "f68881b52f9e7637"
+            ]
+        ]
     },
     {
-        "id": "b2ad079d7b6912ed",
+        "id": "f68881b52f9e7637",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear Respuesta",
         "func": "const year = flow.get('year');\nconst month = flow.get('month');\nconst daysInMonth = flow.get('daysInMonth');\nconst currentDay = flow.get('currentDay');\n\nif (msg.payload && msg.payload.length > 0) {\n    const data = msg.payload[0];\n    const totalConsumo = data.totalConsumo || 0;\n    const promedioMes = totalConsumo / daysInMonth;\n    const promedioDiario = totalConsumo / currentDay;\n    \n    msg.payload = {\n        success: true,\n        data: {\n            consumoTotalMes: parseFloat(totalConsumo.toFixed(3)),\n            consumoPromedioDiario: parseFloat(promedioDiario.toFixed(3)),\n            consumoPromedioMes: parseFloat(promedioMes.toFixed(3)),\n            mes: month,\n            año: year,\n            diasTranscurridos: currentDay,\n            totalDiasMes: daysInMonth,\n            mediciones: data.count\n        }\n    };\n} else {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoTotalMes: 0,\n            consumoPromedioDiario: 0,\n            consumoPromedioMes: 0,\n            mes: month,\n            año: year,\n            diasTranscurridos: currentDay,\n            totalDiasMes: daysInMonth,\n            mediciones: 0\n        }\n    };\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 860,
         "y": 100,
-        "wires": [["87e2c7b9edcdf437"]]
+        "wires": [
+            [
+                "36b87b70047a7682"
+            ]
+        ]
     },
     {
-        "id": "87e2c7b9edcdf437",
+        "id": "36b87b70047a7682",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "x": 1090,
         "y": 100,
         "wires": []
     },
     {
-        "id": "c89b07f209a50f17",
+        "id": "14f9227802fa93ad",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/sectores",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
         "x": 160,
-        "y": 200,
-        "wires": [["db673b8a3d05e1fa"]]
+        "y": 160,
+        "wires": [
+            [
+                "7fb44d59c7857807"
+            ]
+        ]
     },
     {
-        "id": "db673b8a3d05e1fa",
+        "id": "7fb44d59c7857807",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Query Sectores",
         "func": "msg.collection = 'sector';\nmsg.payload = {};\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 370,
-        "y": 200,
-        "wires": [["69ef80cb91841075"]]
+        "y": 160,
+        "wires": [
+            [
+                "b75a5b7a57b86282"
+            ]
+        ]
     },
     {
-        "id": "69ef80cb91841075",
+        "id": "b75a5b7a57b86282",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "find",
         "x": 600,
-        "y": 200,
-        "wires": [["55232caa9dcd3e8f"]]
+        "y": 160,
+        "wires": [
+            [
+                "3f3c0a13e268ca52"
+            ]
+        ]
     },
     {
-        "id": "55232caa9dcd3e8f",
+        "id": "3f3c0a13e268ca52",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear",
         "func": "msg.payload = {\n    success: true,\n    data: msg.payload || []\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 790,
-        "y": 200,
-        "wires": [["6c39f7975b76c031"]]
+        "y": 160,
+        "wires": [
+            [
+                "5057480295440dd0"
+            ]
+        ]
     },
     {
-        "id": "6c39f7975b76c031",
+        "id": "5057480295440dd0",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "x": 990,
-        "y": 200,
+        "y": 160,
         "wires": []
     },
     {
-        "id": "883be5c9d2a9b787",
+        "id": "03dbdeeae09492c3",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/luminarias",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 170,
-        "y": 300,
-        "wires": [["3bcdd71e68abb8ba"]]
+        "x": 160,
+        "y": 220,
+        "wires": [
+            [
+                "4dad1c7c014507b5"
+            ]
+        ]
     },
     {
-        "id": "3bcdd71e68abb8ba",
+        "id": "4dad1c7c014507b5",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Query Luminarias",
         "func": "msg.collection = 'luminarias';\nmsg.payload = {};\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 390,
-        "y": 300,
-        "wires": [["d81b7865ddd22ec4"]]
+        "x": 380,
+        "y": 220,
+        "wires": [
+            [
+                "8cf3212dc2f80696"
+            ]
+        ]
     },
     {
-        "id": "d81b7865ddd22ec4",
+        "id": "8cf3212dc2f80696",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "find",
-        "x": 620,
-        "y": 300,
-        "wires": [["7a05b2452021c3c6"]]
+        "x": 610,
+        "y": 220,
+        "wires": [
+            [
+                "e485739ae4fc361f"
+            ]
+        ]
     },
     {
-        "id": "7a05b2452021c3c6",
+        "id": "e485739ae4fc361f",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear",
         "func": "msg.payload = {\n    success: true,\n    data: msg.payload || [],\n    total: msg.payload ? msg.payload.length : 0\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 810,
-        "y": 300,
-        "wires": [["8f8d869e99fce8db"]]
+        "x": 800,
+        "y": 220,
+        "wires": [
+            [
+                "abf3b06c7b4879bb"
+            ]
+        ]
     },
     {
-        "id": "8f8d869e99fce8db",
+        "id": "abf3b06c7b4879bb",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
-        "x": 1020,
-        "y": 300,
+        "x": 1010,
+        "y": 220,
         "wires": []
     },
     {
-        "id": "4f313c04732c63b0",
+        "id": "970c5cf9a1e70a94",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/notificaciones",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
         "x": 180,
-        "y": 400,
-        "wires": [["71646964f542a3ce"]]
+        "y": 280,
+        "wires": [
+            [
+                "4b5681b1d665a838"
+            ]
+        ]
     },
     {
-        "id": "71646964f542a3ce",
+        "id": "4b5681b1d665a838",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Query Notificaciones",
         "func": "msg.collection = 'notificacion';\nmsg.payload = {};\nmsg.limit = 10;\nmsg.sort = { fecha: -1 };\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 410,
-        "y": 400,
-        "wires": [["b95907a754d4fb27"]]
+        "y": 280,
+        "wires": [
+            [
+                "80dfc721c1cb233f"
+            ]
+        ]
     },
     {
-        "id": "b95907a754d4fb27",
+        "id": "80dfc721c1cb233f",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "find",
         "x": 660,
-        "y": 400,
-        "wires": [["c225c4713a01e2d0"]]
+        "y": 280,
+        "wires": [
+            [
+                "8d5983425d9520fa"
+            ]
+        ]
     },
     {
-        "id": "c225c4713a01e2d0",
+        "id": "8d5983425d9520fa",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear",
         "func": "const sortedData = (msg.payload || []).sort((a, b) => {\n    return new Date(b.fecha) - new Date(a.fecha);\n}).slice(0, 10);\n\nmsg.payload = {\n    success: true,\n    data: sortedData\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 830,
-        "y": 400,
-        "wires": [["a69a49f3f544d759"]]
+        "y": 280,
+        "wires": [
+            [
+                "bc14164f8145cd06"
+            ]
+        ]
     },
     {
-        "id": "a69a49f3f544d759",
+        "id": "bc14164f8145cd06",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "x": 1050,
-        "y": 400,
+        "y": 280,
         "wires": []
     },
     {
-        "id": "f372b224e44e5351",
+        "id": "4710a2d4a682d402",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/estadisticas",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
-        "x": 170,
-        "y": 500,
-        "wires": [["0191494f2d49ea0d"]]
+        "x": 140,
+        "y": 340,
+        "wires": [
+            [
+                "ed76c7a062c2f975"
+            ]
+        ]
     },
     {
-        "id": "0191494f2d49ea0d",
+        "id": "ed76c7a062c2f975",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Count Luminarias",
         "func": "msg.collection = 'luminarias';\nmsg.payload = {};\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 390,
-        "y": 500,
-        "wires": [["fd8bac69a48820e7"]]
+        "x": 360,
+        "y": 340,
+        "wires": [
+            [
+                "05b7a8795ced5513"
+            ]
+        ]
     },
     {
-        "id": "fd8bac69a48820e7",
+        "id": "05b7a8795ced5513",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "find",
-        "x": 620,
-        "y": 500,
-        "wires": [["bf5ef819c5e76775"]]
+        "x": 590,
+        "y": 340,
+        "wires": [
+            [
+                "6683b96d9b4e8f32"
+            ]
+        ]
     },
     {
-        "id": "bf5ef819c5e76775",
+        "id": "6683b96d9b4e8f32",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear Estadísticas",
         "func": "const total = msg.payload ? msg.payload.length : 0;\nconst funcionando = Math.floor(total * 0.85);\n\nmsg.payload = {\n    success: true,\n    data: {\n        totalLuminarias: total,\n        luminariasFuncionando: funcionando,\n        luminariasConProblemas: total - funcionando\n    }\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 850,
-        "y": 500,
-        "wires": [["8859787a04c13307"]]
+        "x": 820,
+        "y": 340,
+        "wires": [
+            [
+                "af31122d120f1d13"
+            ]
+        ]
     },
     {
-        "id": "8859787a04c13307",
+        "id": "af31122d120f1d13",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
-        "x": 1080,
-        "y": 500,
+        "x": 1050,
+        "y": 340,
         "wires": []
     },
     {
-        "id": "027de8454d4819ea",
+        "id": "460f28282e557f67",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/consumo/mes-anterior",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
         "x": 200,
-        "y": 600,
-        "wires": [["d81d39f3699bcff2"]]
+        "y": 400,
+        "wires": [
+            [
+                "63ab2a1848049fea"
+            ]
+        ]
     },
     {
-        "id": "d81d39f3699bcff2",
+        "id": "63ab2a1848049fea",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Query Mes Anterior",
         "func": "const now = new Date();\nconst lastMonth = now.getMonth() === 0 ? 12 : now.getMonth();\nconst lastYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();\n\nflow.set('lastMonth', lastMonth);\nflow.set('lastYear', lastYear);\n\nmsg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $addFields: {\n            mes: { $month: \"$fechaDate\" },\n            anio: { $year: \"$fechaDate\" }\n        }\n    },\n    {\n        $match: {\n            mes: lastMonth,\n            anio: lastYear\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalConsumo: { $sum: \"$consumo\" }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 430,
-        "y": 600,
-        "wires": [["0a519784610bef70"]]
+        "y": 400,
+        "wires": [
+            [
+                "2891fc5fe174958a"
+            ]
+        ]
     },
     {
-        "id": "0a519784610bef70",
+        "id": "2891fc5fe174958a",
         "type": "mongodb in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "mongodb": "65016b8d41a78754",
         "name": "",
         "collection": "",
         "operation": "aggregate",
         "x": 680,
-        "y": 600,
-        "wires": [["6c8aec05b22730ba"]]
+        "y": 400,
+        "wires": [
+            [
+                "8ce9778b927447b1"
+            ]
+        ]
     },
     {
-        "id": "6c8aec05b22730ba",
+        "id": "8ce9778b927447b1",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "Formatear",
         "func": "const lastMonth = flow.get('lastMonth');\nconst lastYear = flow.get('lastYear');\n\nif (msg.payload && msg.payload.length > 0) {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoMesAnterior: parseFloat(msg.payload[0].totalConsumo.toFixed(3)),\n            mes: lastMonth,\n            año: lastYear\n        }\n    };\n} else {\n    msg.payload = {\n        success: true,\n        data: {\n            consumoMesAnterior: 0,\n            mes: lastMonth,\n            año: lastYear\n        }\n    };\n}\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*'\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 850,
-        "y": 600,
-        "wires": [["cd7e635e15a7a69d"]]
+        "y": 400,
+        "wires": [
+            [
+                "62e6489c546b4cb4"
+            ]
+        ]
     },
     {
-        "id": "cd7e635e15a7a69d",
+        "id": "62e6489c546b4cb4",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "x": 1050,
-        "y": 600,
+        "y": 400,
         "wires": []
     },
     {
-        "id": "1d4e24ba2b945f0d",
+        "id": "1cd63be2408bf5d8",
         "type": "http in",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
         "url": "/api/*",
         "method": "options",
         "upload": false,
         "swaggerDoc": "",
-        "x": 150,
-        "y": 700,
-        "wires": [["b4f3b7ecb4a153dd"]]
+        "x": 230,
+        "y": 460,
+        "wires": [
+            [
+                "dfc939b701c9dea2"
+            ]
+        ]
     },
     {
-        "id": "b4f3b7ecb4a153dd",
+        "id": "dfc939b701c9dea2",
         "type": "function",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "CORS Headers",
         "func": "msg.statusCode = 200;\nmsg.headers = {\n    'Access-Control-Allow-Origin': '*',\n    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',\n    'Access-Control-Allow-Headers': 'Content-Type, Authorization'\n};\nmsg.payload = '';\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 360,
-        "y": 700,
-        "wires": [["c974ce09174bcdb4"]]
+        "x": 440,
+        "y": 460,
+        "wires": [
+            [
+                "62273a3648a972de"
+            ]
+        ]
     },
     {
-        "id": "c974ce09174bcdb4",
+        "id": "62273a3648a972de",
         "type": "http response",
-        "z": "223e019f8995e6c5",
+        "z": "829727b6e7b7e807",
         "name": "",
-        "x": 570,
-        "y": 700,
+        "x": 650,
+        "y": 460,
         "wires": []
     },
     {
@@ -397,5 +501,13 @@
         "port": "27017",
         "db": "LumiCert",
         "name": "MongoDB Atlas"
+    },
+    {
+        "id": "e2f68b108e7c53f3",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-mongodb": "0.2.5"
+        }
     }
 ]
