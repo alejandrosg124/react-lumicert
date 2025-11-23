@@ -185,15 +185,21 @@ export const Index = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-gray-400 text-[12px] mb-1">Consumo</p>
-                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.consumo.toFixed(3)} kWh</p>
+                    <p className="text-white text-[16px] font-semibold">
+                      {ultimaMedicion.consumo != null ? ultimaMedicion.consumo.toFixed(3) : '0.000'} kWh
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-[12px] mb-1">Corriente</p>
-                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.corriente.toFixed(2)} A</p>
+                    <p className="text-white text-[16px] font-semibold">
+                      {ultimaMedicion.corriente != null ? ultimaMedicion.corriente.toFixed(2) : '0.00'} A
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-[12px] mb-1">Voltaje</p>
-                    <p className="text-white text-[16px] font-semibold">{ultimaMedicion.voltaje.toFixed(2)} V</p>
+                    <p className="text-white text-[16px] font-semibold">
+                      {ultimaMedicion.voltaje != null ? ultimaMedicion.voltaje.toFixed(2) : '0.00'} V
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-[12px] mb-1">Estado</p>
@@ -305,27 +311,27 @@ export const Index = () => {
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={consumoPorHora} margin={{ top: 10, right: 10, left: -10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" vertical={false} />
-                <XAxis 
-                  dataKey="hora" 
+                <XAxis
+                  dataKey="hora"
                   label={{ value: 'Hora del día', position: 'insideBottom', offset: -10 }}
                   stroke="#666"
                   tick={{ fontSize: 11 }}
                   type="number"
                   ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]}
                 />
-                <YAxis 
+                <YAxis
                   label={{ value: 'Consumo promedio (kWh)', angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
                   stroke="#666"
                   tick={{ fontSize: 11 }}
                   domain={[0, 'auto']}
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', fontSize: 12 }}
                   labelFormatter={(value) => `Hora ${value}:00`}
                   formatter={(value: number) => [`${value.toFixed(2)} kWh`, 'Consumo Promedio']}
                 />
-                <Bar 
-                  dataKey="consumoPromedio" 
+                <Bar
+                  dataKey="consumoPromedio"
                   fill="#60a5fa"
                   radius={[4, 4, 0, 0]}
                 />
@@ -414,7 +420,7 @@ export const Index = () => {
           </div>
         </div>
       </div>
-      
+
     </div>
   )
 }
