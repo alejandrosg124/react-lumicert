@@ -201,7 +201,7 @@ export interface UltimaMedicion {
   sobreconsumo: boolean
   corriente: number
   voltaje: number
-  id_lum: number
+  id_luminaria: number
 }
 
 export interface UltimaMedicionResponse {
@@ -366,6 +366,150 @@ export const fetchUltimaMedicion = async (): Promise<UltimaMedicionResponse> => 
 
   if (!response.ok) {
     throw new Error('Error al obtener la última medición')
+  }
+
+  return await response.json()
+}
+
+// ============== SECTOR STATUS AND DETAILS ==============
+
+export interface SectorConMediciones {
+  _id: string
+  id_sector: number
+  nombre: string
+  zona: string
+  ultimaMedicion: {
+    falla: boolean
+    sobreconsumo: boolean
+  } | null
+  estado: 'ok' | 'warning' | 'error'
+}
+
+export interface SectoresConMedicionesResponse {
+  success: boolean
+  data: SectorConMediciones[]
+}
+
+export interface LuminariaConMedicion {
+  _id: string
+  id_lum: number
+  modelo: string
+  id_sector?: string
+  ubicacion?: {
+    latitud: number
+    longitud: number
+  }
+  ultimaMedicion: {
+    fecha: string
+    consumo: number
+    corriente: number
+    voltaje: number
+    estado_rele: boolean
+    falla: boolean
+    sobreconsumo: boolean
+    perdida_energia: boolean
+  } | null
+  estado: 'Bien' | 'Sobreconsumo' | 'Falla'
+}
+
+export interface LuminariasConMedicionResponse {
+  success: boolean
+  data: LuminariaConMedicion[]
+}
+
+export interface DetalleSector {
+  _id: string
+  id_sector: number
+  nombre: string
+  zona: string
+  totalLuminarias: number
+  luminariasFuncionando: number
+  luminariasConFalla: number
+  luminariasConSobreconsumo: number
+  consumoTotal: number
+  consumoPromedio: number
+}
+
+export interface DetalleSectorResponse {
+  success: boolean
+  data: DetalleSector
+}
+
+// Obtener sectores con sus últimas mediciones (para indicadores de estado)
+export const fetchSectoresConMediciones = async (): Promise<SectoresConMedicionesResponse> => {
+  // Obtener sectores y estados en paralelo
+  const [sectoresResponse, estadosResponse] = await Promise.all([
+    fetchSectores(),
+    fetch(`${API_BASE_URL}/api/sectores/estado`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  ])
+
+  if (!estadosResponse.ok) {
+    throw new Error('Error al obtener estados de sectores')
+  }
+
+  const estadosData = await estadosResponse.json()
+  const estadosPorSector: Record<string, { falla: boolean; sobreconsumo: boolean }> = estadosData.data || {}
+
+  // Combinar sectores con sus estados
+  const sectoresConEstado: SectorConMediciones[] = sectoresResponse.data.map(sector => {
+    const sectorId = sector.id_sector?.toString() || sector._id || ''
+    const estado = estadosPorSector[sectorId] || { falla: false, sobreconsumo: false }
+
+    let estadoFinal: 'ok' | 'warning' | 'error' = 'ok'
+    if (estado.falla) {
+      estadoFinal = 'error'
+    } else if (estado.sobreconsumo) {
+      estadoFinal = 'warning'
+    }
+
+    return {
+      _id: sector._id || '',
+      id_sector: sector.id_sector || 0,
+      nombre: sector.nombre,
+      zona: sector.zona,
+      ultimaMedicion: estado,
+      estado: estadoFinal
+    }
+  })
+
+  return {
+    success: true,
+    data: sectoresConEstado
+  }
+}
+
+// Obtener luminarias de un sector con sus mediciones
+export const fetchLuminariasPorSector = async (idSector: string): Promise<LuminariasConMedicionResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/sectores/${idSector}/luminarias`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener las luminarias del sector')
+  }
+
+  return await response.json()
+}
+
+// Obtener detalle completo de un sector
+export const fetchDetalleSector = async (idSector: string): Promise<DetalleSectorResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/sectores/${idSector}/detalle`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el detalle del sector')
   }
 
   return await response.json()

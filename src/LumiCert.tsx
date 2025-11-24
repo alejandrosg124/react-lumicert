@@ -4,6 +4,7 @@ import { Login } from './pages/auth/Login'
 import { ProtectedRoutes } from './pages/auth/ProtectRoutes'
 import { Layout } from './pages/Layout'
 import { SectorConfig } from './pages/SectorConfig'
+import { DetalleSector } from './pages/DetalleSector'
 
 import { AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
@@ -24,6 +25,7 @@ export const LumiCert = () => {
       <Routes>
         <Route element={<Layout />}>
           <Route path='/' element={<Index />} />
+          <Route path='/sector/:id' element={<DetalleSector />} />
         </Route>
         <Route path='/login' element={<Login />} />
 

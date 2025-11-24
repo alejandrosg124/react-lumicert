@@ -178,7 +178,7 @@ export const Index = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p className="text-gray-400 text-[12px] mb-1">Luminaria</p>
-                      <p className="text-white text-[16px] font-semibold">#{ultimaMedicion.id_lum}</p>
+                      <p className="text-white text-[16px] font-semibold">#{ultimaMedicion.id_luminaria}</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-[12px] mb-1">Fecha/Hora</p>
