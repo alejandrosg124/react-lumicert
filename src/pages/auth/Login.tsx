@@ -12,27 +12,29 @@ export const Login = () => {
   const handleCloseModal = () => { setOpen(false) }
 
   return (
-    <div className="flex h-screen bg-[#0a1219]">
+    <div className="relative flex h-screen w-full">
 
-      {/* image */}
-      <div className="w-1/2 h-full">
+      {/* Background image - full screen */}
+      <div className="absolute inset-0 w-full h-full">
         <img
-          src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2834"
+          src="/LumiCertLogin.jpg"
           alt="Fondo login"
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Login lado derecho */}
-      <div className="w-1/2 bg-[#0a1219] flex flex-col justify-center items-center">
-        <section className="w-3/4 flex flex-col gap-10">
+      {/* Overlay oscuro para mejor legibilidad */}
+      <div className="absolute inset-0 bg-black/40"></div>
 
-          {/* logo y título */}
-          <div className="flex gap-4 justify-center items-center">
-            <div className="w-16 h-16 rounded-xl flex items-center justify-center">
-              <img src="/lumicert-logo.png" alt="LumiCert Logo" className="w-full h-full object-contain" />
+      {/* Login form - centered with transparency */}
+      <div className="relative z-10 w-full flex flex-col justify-center items-center">
+        <section className="w-full max-w-md mx-auto flex flex-col gap-10 bg-[#15232c]/90 backdrop-blur-md p-10 rounded-3xl shadow-2xl">
+
+          {/* logo grande como título */}
+          <div className="flex justify-center items-center">
+            <div className="rounded-3xl">
+              <img src="/lumicert-logo.png" alt="LumiCert Logo" className="w-full h-full object-contain rounded-3xl" />
             </div>
-            <h1 className="font-bold text-white text-6xl tracking-wide">LumiCert</h1>
           </div>
 
           <LoginForm />

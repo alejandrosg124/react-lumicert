@@ -1,11 +1,11 @@
 import { checkingCredentials, login, logout } from '../slices/authSlice'
 import { toast } from 'sonner'
 import { AppDispatch } from '../store'
-import { fetchLogin, fetchRegister, fetchUserInfo, fetchVerifyCookie } from '../../lib/api'
+import { fetchLogin, fetchRegister, fetchVerifyCookie } from '../../lib/api'
 import { setUser } from '../slices/userSlice'
 
 export const startRegister = (form: Record<string, unknown>) => {
-  return async(dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(checkingCredentials())
     try {
       await fetchRegister(form)
@@ -24,7 +24,7 @@ export const startRegister = (form: Record<string, unknown>) => {
 }
 
 export const startLogin = (form: Record<string, unknown>) => {
-  return async(dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     dispatch(checkingCredentials())
 
     try {
@@ -34,12 +34,12 @@ export const startLogin = (form: Record<string, unknown>) => {
       })
       dispatch(login())
 
-      const userData = await fetchUserInfo()
-      dispatch(setUser(userData))
+      const userData = await fetchVerifyCookie()
+      dispatch(setUser(userData.user))
       return true
     } catch (error) {
-      if(error instanceof Error) {
-        dispatch(logout({errorMessage: error.message}))
+      if (error instanceof Error) {
+        dispatch(logout({ errorMessage: error.message }))
         toast.error(error.message)
         return false
       }

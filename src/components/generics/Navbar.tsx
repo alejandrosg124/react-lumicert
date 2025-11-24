@@ -8,7 +8,8 @@ import { toast } from 'sonner'
 
 export const Navbar = () => {
 
-  const { profilepic } = useSelector((state: RootState) => state.user)
+  const { profilepic, name } = useSelector((state: RootState) => state.user)
+  const { status } = useSelector((state: RootState) => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -23,48 +24,58 @@ export const Navbar = () => {
   }
 
   return (
-    <nav className="bg-[#15232c] relative w-full h-[70px]">
+    <nav className="bg-[#15232c] relative w-full h-[70px] flex items-center justify-center z-50">
       {/* Logo absoluto en la izquierda */}
-      <div className="absolute h-[70px] left-0 top-0 w-[200px]">
-        <img 
-          alt="LumiCert Logo" 
-          className="absolute inset-0 max-w-none object-cover object-center pointer-events-none size-full" 
-          src="/lumicert-logo.png" 
+      <div className="absolute left-0 h-[70px] w-[200px]">
+        <img
+          alt="LumiCert Logo"
+          className="max-w-none object-cover object-center pointer-events-none size-full"
+          src="/lumicert-logo.png"
         />
+      </div>
+
+      {/* Menú de navegación centrado */}
+      <div className="flex gap-6">
+        <Link
+          to="/"
+          className="text-white hover:text-blue-400 font-medium text-[16px] transition-colors"
+        >
+          Dashboard
+        </Link>
+        <Link
+          to="/sectores"
+          className="text-white hover:text-blue-400 font-medium text-[16px] transition-colors"
+        >
+          Configuración de Sectores
+        </Link>
       </div>
 
       {/* Botón de login/perfil absoluto en la derecha */}
       <div className="absolute right-6 top-[12px]">
-        { profilepic ? (
-          <div className="relative group">
-            <div className="bg-[#273b48] flex gap-3 h-[46px] items-center overflow-clip px-4 py-2 rounded-[25px] w-auto">
-              <p className="font-medium leading-normal text-[16px] text-white">
-                Perfil
-              </p>
-              <div className="flex h-[30px] items-center justify-center relative shrink-0 w-0">
-                <div className="flex-none rotate-90">
-                  <div className="h-0 relative w-[30px]">
-                    <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
-                      <img alt="" className="block max-w-none size-full" src="/divider.svg" />
-                    </div>
+        {status === 'authenticated' ? (
+          <div
+            onClick={handleLogout}
+            className="bg-[#273b48] flex gap-3 h-[46px] items-center overflow-clip px-4 py-2 rounded-[25px] w-auto hover:bg-[#1a2830] transition-all duration-300 ease-in-out cursor-pointer group"
+          >
+            <p className="font-medium leading-normal text-[16px] text-white transition-all duration-300">
+              <span className="group-hover:hidden">{name || 'Usuario'}</span>
+              <span className="hidden group-hover:inline">Cerrar sesión</span>
+            </p>
+            <div className="flex h-[30px] items-center justify-center relative shrink-0 w-0">
+              <div className="flex-none rotate-90">
+                <div className="h-0 relative w-[30px]">
+                  <div className="absolute bottom-0 left-0 right-0 top-[-2px]">
+                    <img alt="" className="block max-w-none size-full" src="/divider.svg" />
                   </div>
                 </div>
               </div>
-              <div className="h-[34px] relative shrink-0 w-[34px]">
-                <img 
-                  alt="Perfil" 
-                  className="block max-w-none size-full rounded-full object-cover" 
-                  src={profilepic && profilepic.trim() !== '' ? profilepic : defaultProfilePic} 
-                />
-              </div>
             </div>
-            <div className="absolute right-0 top-full mt-2 opacity-0 bg-[#273b48] group-hover:opacity-100 transition-opacity duration-200 hidden group-hover:block rounded-[15px] overflow-hidden min-w-[150px] z-50">
-              <span 
-                onClick={handleLogout} 
-                className="block px-4 py-2 text-white hover:bg-[#1a2830] cursor-pointer text-sm"
-              >
-                Cerrar sesión
-              </span>
+            <div className="h-[34px] relative shrink-0 w-[34px]">
+              <img
+                alt="Perfil"
+                className="block max-w-none size-full rounded-full object-cover"
+                src={profilepic && profilepic.trim() !== '' ? profilepic : defaultProfilePic}
+              />
             </div>
           </div>
         ) : (
@@ -83,10 +94,10 @@ export const Navbar = () => {
                 </div>
               </div>
               <div className="h-[34px] relative shrink-0 w-[34px]">
-                <img 
-                  alt="" 
-                  className="block max-w-none size-full rounded-full object-cover" 
-                  src={defaultProfilePic} 
+                <img
+                  alt=""
+                  className="block max-w-none size-full rounded-full object-cover"
+                  src={defaultProfilePic}
                 />
               </div>
             </div>
