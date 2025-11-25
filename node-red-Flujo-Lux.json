@@ -1,0 +1,148 @@
+[
+    {
+        "id": "lux_flow_tab",
+        "type": "tab",
+        "label": "Flujo Lux",
+        "disabled": false,
+        "info": "Flujo para obtener y actualizar el valor de lux de la última medición"
+    },
+    {
+        "id": "http_lux_endpoint",
+        "type": "http in",
+        "z": "lux_flow_tab",
+        "name": "GET /api/ultima-medicion/lux",
+        "url": "/api/ultima-medicion/lux",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 180,
+        "y": 100,
+        "wires": [
+            [
+                "query_ultima_lux"
+            ]
+        ]
+    },
+    {
+        "id": "query_ultima_lux",
+        "type": "function",
+        "z": "lux_flow_tab",
+        "name": "Query Última Medición Lux",
+        "func": "msg.collection = 'medicion';\nmsg.payload = [\n    {\n        $addFields: {\n            fechaSplit: { $split: [\"$fecha\", \"T\"] }\n        }\n    },\n    {\n        $addFields: {\n            fechaNormalizada: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                    then: \"$fecha\",\n                    else: { $concat: [\"$fecha\", \"Z\"] }\n                }\n            }\n        }\n    },\n    {\n        $addFields: {\n            fechaDate: { \n                $dateFromString: { \n                    dateString: \"$fechaNormalizada\",\n                    onError: null\n                } \n            }\n        }\n    },\n    {\n        $match: {\n            fechaDate: { $ne: null }\n        }\n    },\n    {\n        $sort: { fechaDate: -1 }\n    },\n    {\n        $limit: 1\n    },\n    {\n        $project: {\n            _id: 0,\n            lux: { $ifNull: [\"$lux\", 0] },\n            fecha: 1\n        }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 100,
+        "wires": [
+            [
+                "mongodb_query_lux"
+            ]
+        ]
+    },
+    {
+        "id": "mongodb_query_lux",
+        "type": "mongodb in",
+        "z": "lux_flow_tab",
+        "mongodb": "65016b8d41a78754",
+        "name": "MongoDB Atlas",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 680,
+        "y": 100,
+        "wires": [
+            [
+                "format_lux_response"
+            ]
+        ]
+    },
+    {
+        "id": "format_lux_response",
+        "type": "function",
+        "z": "lux_flow_tab",
+        "name": "Formatear Respuesta Lux",
+        "func": "const data = msg.payload[0] || null;\n\nmsg.payload = {\n    success: true,\n    data: data ? {\n        lux: data.lux || 0,\n        fecha: data.fecha\n    } : {\n        lux: 0,\n        fecha: new Date().toISOString()\n    }\n};\n\nmsg.statusCode = 200;\nmsg.headers = {\n    'Content-Type': 'application/json',\n    'Access-Control-Allow-Origin': '*',\n    'Access-Control-Allow-Methods': 'GET, OPTIONS',\n    'Access-Control-Allow-Headers': 'Content-Type'\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 100,
+        "wires": [
+            [
+                "http_response_lux"
+            ]
+        ]
+    },
+    {
+        "id": "http_response_lux",
+        "type": "http response",
+        "z": "lux_flow_tab",
+        "name": "HTTP Response",
+        "statusCode": "",
+        "headers": {},
+        "x": 1170,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "options_lux_cors",
+        "type": "http in",
+        "z": "lux_flow_tab",
+        "name": "OPTIONS /api/ultima-medicion/lux",
+        "url": "/api/ultima-medicion/lux",
+        "method": "options",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 180,
+        "wires": [
+            [
+                "cors_lux_response"
+            ]
+        ]
+    },
+    {
+        "id": "cors_lux_response",
+        "type": "function",
+        "z": "lux_flow_tab",
+        "name": "CORS Response",
+        "func": "msg.statusCode = 200;\nmsg.payload = '';\nmsg.headers = {\n    'Access-Control-Allow-Origin': '*',\n    'Access-Control-Allow-Methods': 'GET, OPTIONS',\n    'Access-Control-Allow-Headers': 'Content-Type'\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 180,
+        "wires": [
+            [
+                "http_cors_response"
+            ]
+        ]
+    },
+    {
+        "id": "http_cors_response",
+        "type": "http response",
+        "z": "lux_flow_tab",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 690,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "65016b8d41a78754",
+        "type": "mongodb",
+        "hostname": "cluster0.gne8ies.mongodb.net",
+        "topology": "dnscluster",
+        "connectOptions": "",
+        "port": "27017",
+        "db": "LumiCert",
+        "name": "MongoDB Atlas"
+    }
+]

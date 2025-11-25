@@ -40,6 +40,19 @@ export const ListaSectores = () => {
     }
 
     cargarDatos()
+
+    // Actualizar estados de sectores cada 3 segundos
+    const intervalId = setInterval(async () => {
+      try {
+        const sectoresData = await fetchSectoresConMediciones()
+        setSectores(sectoresData.data)
+      } catch (error) {
+        console.error('Error al actualizar estados de sectores:', error)
+      }
+    }, 3000)
+
+    // Limpiar intervalo al desmontar el componente
+    return () => clearInterval(intervalId)
   },
     [])
 

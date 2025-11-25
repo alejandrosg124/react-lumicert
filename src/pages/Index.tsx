@@ -12,6 +12,7 @@ import {
   fetchConsumoDiario,
   fetchConsumoPorHora,
   fetchUltimaMedicion,
+  fetchUltimaLux,
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
   type NotificacionesResponse,
@@ -19,9 +20,11 @@ import {
   type EstadisticasResponse,
   type ConsumoDiarioResponse,
   type ConsumoHoraResponse,
-  type UltimaMedicionResponse
+  type UltimaMedicionResponse,
+  type UltimaLuxResponse
 } from '../lib/api'
 import { ListaSectores } from '../components/dashboard/ListaSectores'
+import { LuxGauge } from '../components/primitives/LuxGauge'
 
 export const Index = () => {
   const [consumoMes, setConsumoMes] = useState<ConsumoTotalMesResponse['data'] | null>(null)
@@ -31,6 +34,7 @@ export const Index = () => {
   const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
   const [consumoPorHora, setConsumoPorHora] = useState<ConsumoHoraResponse['data']>([])
   const [ultimaMedicion, setUltimaMedicion] = useState<UltimaMedicionResponse['data']>(null)
+  const [ultimaLux, setUltimaLux] = useState<UltimaLuxResponse['data'] | null>(null)
   const [reportes, setReportes] = useState<ReportesResponse['data']>([])
   const [showReporteModal, setShowReporteModal] = useState(false)
   const [nuevoReporte, setNuevoReporte] = useState({ titulo: '', descripcion: '', id_luminaria: '' })
@@ -49,7 +53,8 @@ export const Index = () => {
           estadisticasData,
           consumoDiarioData,
           consumoPorHoraData,
-          ultimaMedicionData
+          ultimaMedicionData,
+          luxData
         ] = await Promise.all([
           fetchConsumoTotalMes(),
           fetchConsumoMesAnterior(),
@@ -59,7 +64,8 @@ export const Index = () => {
           fetchEstadisticas(),
           fetchConsumoDiario(),
           fetchConsumoPorHora(),
-          fetchUltimaMedicion()
+          fetchUltimaMedicion(),
+          fetchUltimaLux()
         ])
 
         console.log('Datos recibidos:', {
@@ -91,6 +97,7 @@ export const Index = () => {
         setConsumoDiario(consumoDiarioData.data)
         setConsumoPorHora(horasCompletas)
         setUltimaMedicion(ultimaMedicionData.data)
+        setUltimaLux(luxData.data)
       } catch (error) {
         console.error('Error al cargar datos:', error)
       } finally {
@@ -110,8 +117,21 @@ export const Index = () => {
       }
     }, 3000)
 
-    // Limpiar intervalo al desmontar el componente
-    return () => clearInterval(intervalId)
+    // Actualizar lux cada 3 segundos
+    const intervalLuxId = setInterval(async () => {
+      try {
+        const luxData = await fetchUltimaLux()
+        setUltimaLux(luxData.data)
+      } catch (error) {
+        console.error('Error al actualizar lux:', error)
+      }
+    }, 3000)
+
+    // Limpiar intervalos al desmontar el componente
+    return () => {
+      clearInterval(intervalId)
+      clearInterval(intervalLuxId)
+    }
   }, [])
 
   // Auto-refresh notificaciones y reportes cada 3 segundos
@@ -243,6 +263,12 @@ export const Index = () => {
                 No hay mediciones disponibles
               </div>
             )}
+          </div>
+
+          {/* Medidor de Lux */}
+          <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
+            <h2 className="text-white text-[24px] font-bold text-center mb-4">Luminosidad</h2>
+            <LuxGauge value={ultimaLux?.lux || 0} maxValue={1000} />
           </div>
         </div>
 

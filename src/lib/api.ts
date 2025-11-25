@@ -216,6 +216,7 @@ export interface UltimaMedicion {
   corriente: number
   voltaje: number
   id_luminaria: number
+  lux?: number
 }
 
 export interface UltimaMedicionResponse {
@@ -429,6 +430,32 @@ export const fetchUltimaMedicion = async (): Promise<UltimaMedicionResponse> => 
 
   if (!response.ok) {
     throw new Error('Error al obtener la última medición')
+  }
+
+  return await response.json()
+}
+
+// Obtener lux de última medición
+export interface UltimaLux {
+  lux: number
+  fecha: string
+}
+
+export interface UltimaLuxResponse {
+  success: boolean
+  data: UltimaLux
+}
+
+export const fetchUltimaLux = async (): Promise<UltimaLuxResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/ultima-medicion/lux`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el valor de lux')
   }
 
   return await response.json()
