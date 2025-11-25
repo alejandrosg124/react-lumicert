@@ -51,7 +51,8 @@
                 "e937696da1996c0e",
                 "822a1bb9c4db4f5d",
                 "c76137fb375e4a39",
-                "3ee6cecc5d2ee03e"
+                "3ee6cecc5d2ee03e",
+                "a1b2c3d4e5f6g7h8"
             ]
         ]
     },
@@ -247,7 +248,7 @@
         "type": "function",
         "z": "f430733d2357ca62",
         "name": "registrar_notificacion_sobreconsumo",
-        "func": "// Guarda notificación cuando una luminaria presenta 3 sobreconsumos consecutivos\n// Usa context para almacenar contadores temporales\n\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const sobreconsumo = l.sobreconsumo === true || l.overcurrent === true;\n\n    // Obtener contador previo del contexto\n    let contador = context.get(id) || 0;\n\n    if (sobreconsumo) {\n        contador++;\n        context.set(id, contador);\n\n        // Si llegó a 3, generar notificación\n        if (contador >= 3) {\n            const notificacion = {\n                id_notificacion: new Date().getTime().toString(),\n                id_luminaria: id,\n                fecha: now.toISOString(),\n                descripcion: `⚠️ Luminaria ${id} en sobreconsumo por mucho tiempo`\n            };\n            notificaciones.push(notificacion);\n\n            // Reiniciar contador después de registrar\n            context.set(id, 0);\n        }\n    } else {\n        // Reinicia si ya no hay sobreconsumo\n        context.set(id, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n} else {\n    return null; // No enviar nada si no hay alertas\n}",
+        "func": "// Guarda notificación cuando una luminaria presenta 3 sobreconsumos consecutivos\n// Usa context para almacenar contadores temporales\n\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const sobreconsumo = l.sobreconsumo === true || l.overcurrent === true;\n\n    // Obtener contador previo del contexto\n    let contador = context.get(`sobreconsumo_${id}`) || 0;\n\n    if (sobreconsumo) {\n        contador++;\n        context.set(`sobreconsumo_${id}`, contador);\n\n        // Si llegó a 3, generar notificación\n        if (contador >= 3) {\n            const notificacion = {\n                titulo: \"Sobreconsumo\",\n                descripcion: `Luminaria ${id} en sobreconsumo por mucho tiempo`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            };\n            notificaciones.push(notificacion);\n\n            // Reiniciar contador después de registrar\n            context.set(`sobreconsumo_${id}`, 0);\n        }\n    } else {\n        // Reinicia si ya no hay sobreconsumo\n        context.set(`sobreconsumo_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n} else {\n    return null; // No enviar nada si no hay alertas\n}",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -255,6 +256,26 @@
         "finalize": "",
         "libs": [],
         "x": 970,
+        "y": 240,
+        "wires": [
+            [
+                "d4e5f6g7h8i9j0k1"
+            ]
+        ]
+    },
+    {
+        "id": "d4e5f6g7h8i9j0k1",
+        "type": "split",
+        "z": "f430733d2357ca62",
+        "name": "split notif sobreconsumo",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 1200,
         "y": 240,
         "wires": [
             [
@@ -267,8 +288,8 @@
         "type": "function",
         "z": "f430733d2357ca62",
         "name": "validar_bajo_consumo",
-        "func": "// detectar luminarias en bajo consumo consecutivo\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst alertas = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const bajo = (l.W !== undefined && l.W < 10) || (l.consumo !== undefined && l.consumo < 0.1); // umbral configurable\n\n    let contador = context.get(id) || 0;\n\n    if (bajo) {\n        contador++;\n        context.set(id, contador);\n\n        if (contador >= 3) {\n            alertas.push({ id_luminaria: id, fecha: now.toISOString(), descripcion: `⚠️ Luminaria ${id} en bajo consumo por mucho tiempo` });\n            context.set(id, 0);\n        }\n    } else {\n        context.set(id, 0);\n    }\n});\n\nif (alertas.length > 0) {\n    msg.payload = { alertas };\n    return [msg, null]; // sale por la primera salida para notificación\n}\n\nreturn [null, msg]; // sale por la segunda si no hay alertas",
-        "outputs": 2,
+        "func": "// detectar luminarias en bajo consumo/falla consecutivo\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const falla = l.fail_low_current === true || l.falla === true;\n\n    let contador = context.get(`falla_${id}`) || 0;\n\n    if (falla) {\n        contador++;\n        context.set(`falla_${id}`, contador);\n\n        if (contador >= 3) {\n            notificaciones.push({\n                titulo: \"Falla\",\n                descripcion: `Luminaria ${id} en falla por mucho tiempo`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            });\n            context.set(`falla_${id}`, 0);\n        }\n    } else {\n        context.set(`falla_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
@@ -278,10 +299,28 @@
         "y": 140,
         "wires": [
             [
-                "2115e914737d9985",
-                "4ff7855c34dd5c84"
-            ],
-            []
+                "e5f6g7h8i9j0k1l2"
+            ]
+        ]
+    },
+    {
+        "id": "e5f6g7h8i9j0k1l2",
+        "type": "split",
+        "z": "f430733d2357ca62",
+        "name": "split notif falla",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 1050,
+        "y": 100,
+        "wires": [
+            [
+                "2115e914737d9985"
+            ]
         ]
     },
     {
@@ -300,6 +339,61 @@
         "broker": "140301bcc7afc699",
         "x": 1220,
         "y": 160,
+        "wires": []
+    },
+    {
+        "id": "a1b2c3d4e5f6g7h8",
+        "type": "function",
+        "z": "f430733d2357ca62",
+        "name": "detectar_consumo_dia",
+        "func": "// Detectar luminarias consumiendo energía durante el día\nconst lux = msg.payload.var_ambiente?.lux || 0;\nconst luminarias = msg.payload.luminarias || [];\n\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const encendida = l.estadoRelay === true;\n    const esDeDia = lux > 200;\n    \n    let contador = context.get(`dia_${id}`) || 0;\n    \n    if (encendida && esDeDia) {\n        contador++;\n        context.set(`dia_${id}`, contador);\n        \n        if (contador >= 3) {\n            notificaciones.push({\n                titulo: \"Consumo de día\",\n                descripcion: `Luminaria ${id} consumiendo energía de día`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            });\n            context.set(`dia_${id}`, 0);\n        }\n    } else {\n        context.set(`dia_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 80,
+        "wires": [
+            [
+                "b2c3d4e5f6g7h8i9"
+            ]
+        ]
+    },
+    {
+        "id": "b2c3d4e5f6g7h8i9",
+        "type": "split",
+        "z": "f430733d2357ca62",
+        "name": "split notif dia",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 870,
+        "y": 80,
+        "wires": [
+            [
+                "c3d4e5f6g7h8i9j0"
+            ]
+        ]
+    },
+    {
+        "id": "c3d4e5f6g7h8i9j0",
+        "type": "mongodb out",
+        "z": "f430733d2357ca62",
+        "mongodb": "bdc4e5f59c664d63",
+        "name": "Guardar notificación consumo día",
+        "collection": "notificacion",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "insert",
+        "x": 1110,
+        "y": 80,
         "wires": []
     },
     {

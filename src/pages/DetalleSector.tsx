@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import {
     fetchDetalleSector,
     fetchLuminariasPorSector,
+    fetchConsumoMensualSector,
     type DetalleSector as DetalleSectorType,
     type LuminariaConMedicion
 } from '../lib/api'
@@ -14,6 +16,8 @@ export const DetalleSector = () => {
     const [error, setError] = useState<string | null>(null)
     const [detalle, setDetalle] = useState<DetalleSectorType | null>(null)
     const [luminarias, setLuminarias] = useState<LuminariaConMedicion[]>([])
+    const [consumoMensual, setConsumoMensual] = useState<Array<{ mes: string; consumo: number }>>([])
+
 
     useEffect(() => {
         const cargarDatos = async () => {
@@ -26,15 +30,17 @@ export const DetalleSector = () => {
             try {
                 console.log('Cargando datos del sector:', id)
 
-                const [detalleData, luminariasData] = await Promise.all([
+                const [detalleData, luminariasData, consumoData] = await Promise.all([
                     fetchDetalleSector(id),
-                    fetchLuminariasPorSector(id)
+                    fetchLuminariasPorSector(id),
+                    fetchConsumoMensualSector(id)
                 ])
 
-                console.log('Datos recibidos:', { detalleData, luminariasData })
+                console.log('Datos recibidos:', { detalleData, luminariasData, consumoData })
 
                 setDetalle(detalleData.data)
                 setLuminarias(luminariasData.data)
+                setConsumoMensual(consumoData.data || [])
             } catch (error) {
                 console.error('Error al cargar detalle del sector:', error)
                 setError(error instanceof Error ? error.message : 'Error desconocido al cargar datos')
@@ -53,7 +59,7 @@ export const DetalleSector = () => {
             Falla: 'bg-red-500'
         }
         return (
-            <span className={`text-[12px] ${colors[estado]} text-white px-3 py-1 rounded-full font-semibold`}>
+            <span className={`text - [12px] ${colors[estado]} text - white px - 3 py - 1 rounded - full font - semibold`}>
                 {estado}
             </span>
         )
@@ -172,6 +178,53 @@ export const DetalleSector = () => {
                                 {detalle.luminariasConSobreconsumo}
                             </p>
                         </div>
+                    </div>
+                </div>
+
+                {/* Gráfica de Consumo Mensual */}
+                <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6 mb-6">
+                    <h2 className="text-white text-[28px] font-bold mb-6 text-center">Consumo Mensual (kWh)</h2>
+
+                    <div className="bg-[#394d5c]/60 rounded-[15px] p-6">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <LineChart
+                                data={consumoMensual}
+                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#394d5c" />
+                                <XAxis
+                                    dataKey="mes"
+                                    stroke="#9ca3af"
+                                    style={{ fontSize: '12px' }}
+                                />
+                                <YAxis
+                                    stroke="#9ca3af"
+                                    style={{ fontSize: '12px' }}
+                                    label={{ value: 'kWh', angle: -90, position: 'insideLeft', style: { fill: '#9ca3af' } }}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#1a2936',
+                                        border: '1px solid #394d5c',
+                                        borderRadius: '8px',
+                                        color: '#fff'
+                                    }}
+                                    labelStyle={{ color: '#9ca3af' }}
+                                />
+                                <Legend
+                                    wrapperStyle={{ color: '#9ca3af', fontSize: '14px' }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="consumo"
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    dot={{ fill: '#3b82f6', r: 5 }}
+                                    activeDot={{ r: 7 }}
+                                    name="Consumo (kWh)"
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
 

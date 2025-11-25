@@ -1170,7 +1170,7 @@
         "type": "function",
         "z": "7c7613f3e7ca3f2d",
         "name": "Query Luminarias con Mediciones",
-        "func": "const sectorId = msg.req.params.id;\n\n// Buscar luminarias directamente por id_sector (que es el _id del sector como string)\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $match: {\n            id_sector: sectorId\n        }\n    },\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumId: '$id_lum' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: {\n                            $or: [\n                                { $eq: ['$id_luminaria', '$$lumId'] },\n                                { $eq: [{ $toString: '$id_luminaria' }, '$$lumId'] }\n                            ]\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                },\n                {\n                    $limit: 1\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] }\n        }\n    },\n    {\n        $addFields: {\n            estado: {\n                $cond: {\n                    if: { $eq: ['$ultimaMedicion.falla', true] },\n                    then: 'Falla',\n                    else: {\n                        $cond: {\n                            if: { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                            then: 'Sobreconsumo',\n                            else: 'Bien'\n                        }\n                    }\n                }\n            }\n        }\n    },\n    {\n        $project: {\n            mediciones: 0\n        }\n    }\n];\n\nreturn msg;",
+        "func": "const sectorId = msg.req.params.id;\n\n// Buscar luminarias directamente por id_sector (que es el _id del sector como string)\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $match: {\n            id_sector: sectorId\n        }\n    },\n    {\n        $addFields: {\n            // Extraer el número del id_lum (ej: \"lum_3\" -> 3)\n            lumNumerico: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$id_lum\", regex: \"^lum_[0-9]+$\" } },\n                    then: {\n                        $toInt: {\n                            $arrayElemAt: [\n                                { $split: [\"$id_lum\", \"_\"] },\n                                1\n                            ]\n                        }\n                    },\n                    else: null\n                }\n            }\n        }\n    },\n    {\n        $match: {\n            lumNumerico: { $ne: null }\n        }\n    },\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumNum: '$lumNumerico' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: { $eq: ['$id_luminaria', '$$lumNum'] }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                },\n                {\n                    $limit: 1\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] }\n        }\n    },\n    {\n        $addFields: {\n            estado: {\n                $cond: {\n                    if: { $eq: ['$ultimaMedicion.falla', true] },\n                    then: 'Falla',\n                    else: {\n                        $cond: {\n                            if: { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                            then: 'Sobreconsumo',\n                            else: 'Bien'\n                        }\n                    }\n                }\n            }\n        }\n    },\n    {\n        $project: {\n            mediciones: 0,\n            lumNumerico: 0\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 480,
@@ -1244,7 +1244,7 @@
         "type": "function",
         "z": "7c7613f3e7ca3f2d",
         "name": "Query Detalle Sector",
-        "func": "const sectorId = msg.req.params.id;\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\nconst daysInMonth = new Date(year, month, 0).getDate();\n\nflow.set('sectorId', sectorId);\nflow.set('daysInMonth', daysInMonth);\n\n// Buscar luminarias directamente por id_sector (que es el _id del sector como string)\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $match: {\n            id_sector: sectorId\n        }\n    },\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumId: '$id_lum' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: {\n                            $or: [\n                                { $eq: ['$id_luminaria', '$$lumId'] },\n                                { $eq: [{ $toString: '$id_luminaria' }, '$$lumId'] }\n                            ]\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $addFields: {\n                        mes: { $month: \"$fechaDate\" },\n                        anio: { $year: \"$fechaDate\" }\n                    }\n                },\n                {\n                    $match: {\n                        mes: month,\n                        anio: year\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] },\n            consumoTotal: { $sum: '$mediciones.consumo' }\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalLuminarias: { $sum: 1 },\n            luminariasFuncionando: {\n                $sum: {\n                    $cond: [\n                        { $ne: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            luminariasConFalla: {\n                $sum: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            luminariasConSobreconsumo: {\n                $sum: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            consumoTotal: { $sum: '$consumoTotal' }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            totalLuminarias: 1,\n            luminariasFuncionando: 1,\n            luminariasConFalla: 1,\n            luminariasConSobreconsumo: 1,\n            consumoTotal: 1,\n            consumoPromedio: { $divide: ['$consumoTotal', daysInMonth] }\n        }\n    }\n];\n\nreturn msg;",
+        "func": "const sectorId = msg.req.params.id;\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;\nconst daysInMonth = new Date(year, month, 0).getDate();\n\nflow.set('sectorId', sectorId);\nflow.set('daysInMonth', daysInMonth);\n\n// Buscar luminarias directamente por id_sector (que es el _id del sector como string)\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $match: {\n            id_sector: sectorId\n        }\n    },\n    {\n        $addFields: {\n            // Extraer el número del id_lum (ej: \"lum_3\" -> 3)\n            lumNumerico: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$id_lum\", regex: \"^lum_[0-9]+$\" } },\n                    then: {\n                        $toInt: {\n                            $arrayElemAt: [\n                                { $split: [\"$id_lum\", \"_\"] },\n                                1\n                            ]\n                        }\n                    },\n                    else: null\n                }\n            }\n        }\n    },\n    {\n        $match: {\n            lumNumerico: { $ne: null }\n        }\n    },\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumNum: '$lumNumerico' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: { $eq: ['$id_luminaria', '$$lumNum'] }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $addFields: {\n                        mes: { $month: \"$fechaDate\" },\n                        anio: { $year: \"$fechaDate\" }\n                    }\n                },\n                {\n                    $match: {\n                        mes: month,\n                        anio: year\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] },\n            consumoTotal: { $sum: '$mediciones.consumo' }\n        }\n    },\n    {\n        $group: {\n            _id: null,\n            totalLuminarias: { $sum: 1 },\n            luminariasFuncionando: {\n                $sum: {\n                    $cond: [\n                        { $ne: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            luminariasConFalla: {\n                $sum: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            luminariasConSobreconsumo: {\n                $sum: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            consumoTotal: { $sum: '$consumoTotal' }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            totalLuminarias: 1,\n            luminariasFuncionando: 1,\n            luminariasConFalla: 1,\n            luminariasConSobreconsumo: 1,\n            consumoTotal: 1,\n            consumoPromedio: { $divide: ['$consumoTotal', daysInMonth] }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 450,
@@ -1350,7 +1350,7 @@
         "type": "function",
         "z": "7c7613f3e7ca3f2d",
         "name": "Query Estado Sectores",
-        "func": "// Obtener última medición de cada luminaria agrupada por sector\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumId: '$id_lum' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: {\n                            $or: [\n                                { $eq: ['$id_luminaria', '$$lumId'] },\n                                { $eq: [{ $toString: '$id_luminaria' }, '$$lumId'] }\n                            ]\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                },\n                {\n                    $limit: 1\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] }\n        }\n    },\n    {\n        $group: {\n            _id: '$id_sector',\n            tieneFalla: {\n                $max: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            tieneSobreconsumo: {\n                $max: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                        1,\n                        0\n                    ]\n                }\n            }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            id_sector: '$_id',\n            falla: { $eq: ['$tieneFalla', 1] },\n            sobreconsumo: { $eq: ['$tieneSobreconsumo', 1] }\n        }\n    }\n];\n\nreturn msg;",
+        "func": "// Obtener última medición de cada luminaria agrupada por sector\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $addFields: {\n            // Extraer el número del id_lum (ej: \"lum_3\" -> 3)\n            lumNumerico: {\n                $cond: {\n                    if: { $regexMatch: { input: \"$id_lum\", regex: \"^lum_[0-9]+$\" } },\n                    then: {\n                        $toInt: {\n                            $arrayElemAt: [\n                                { $split: [\"$id_lum\", \"_\"] },\n                                1\n                            ]\n                        }\n                    },\n                    else: null\n                }\n            }\n        }\n    },\n    {\n        $match: {\n            lumNumerico: { $ne: null }\n        }\n    },\n    {\n        $lookup: {\n            from: 'medicion',\n            let: { lumNum: '$lumNumerico' },\n            pipeline: [\n                {\n                    $match: {\n                        $expr: { $eq: ['$id_luminaria', '$$lumNum'] }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaNormalizada: {\n                            $cond: {\n                                if: { $regexMatch: { input: \"$fecha\", regex: \"Z$\" } },\n                                then: \"$fecha\",\n                                else: { $concat: [\"$fecha\", \"Z\"] }\n                            }\n                        }\n                    }\n                },\n                {\n                    $addFields: {\n                        fechaDate: { \n                            $dateFromString: { \n                                dateString: \"$fechaNormalizada\",\n                                onError: null\n                            } \n                        }\n                    }\n                },\n                {\n                    $match: {\n                        fechaDate: { $ne: null }\n                    }\n                },\n                {\n                    $sort: { fechaDate: -1 }\n                },\n                {\n                    $limit: 1\n                }\n            ],\n            as: 'mediciones'\n        }\n    },\n    {\n        $addFields: {\n            ultimaMedicion: { $arrayElemAt: ['$mediciones', 0] }\n        }\n    },\n    {\n        $group: {\n            _id: '$id_sector',\n            tieneFalla: {\n                $max: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.falla', true] },\n                        1,\n                        0\n                    ]\n                }\n            },\n            tieneSobreconsumo: {\n                $max: {\n                    $cond: [\n                        { $eq: ['$ultimaMedicion.sobreconsumo', true] },\n                        1,\n                        0\n                    ]\n                }\n            }\n        }\n    },\n    {\n        $project: {\n            _id: 0,\n            id_sector: '$_id',\n            falla: { $eq: ['$tieneFalla', 1] },\n            sobreconsumo: { $eq: ['$tieneSobreconsumo', 1] }\n        }\n    }\n];\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "x": 430,
@@ -1411,6 +1411,114 @@
         "port": "27017",
         "db": "LumiCert",
         "name": "MongoDB Atlas"
+    },
+    {
+        "id": "a1a2a3a4a5a6a7a8",
+        "type": "http in",
+        "z": "7c7613f3e7ca3f2d",
+        "name": "",
+        "url": "/api/sectores/:id/consumo-mensual",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 1000,
+        "wires": [
+            [
+                "b2b3b4b5b6b7b8b9"
+            ]
+        ]
+    },
+    {
+        "id": "b2b3b4b5b6b7b8b9",
+        "type": "function",
+        "z": "7c7613f3e7ca3f2d",
+        "name": "Query Consumo Mensual Sector",
+        "func": "const sectorId = msg.req.params.id;\nconst now = new Date();\nconst currentYear = now.getFullYear();\n\nmsg.collection = 'luminarias';\nmsg.payload = [\n    {\n        $match: {\n            id_sector: sectorId\n        }\n    },\n    {\n        $project: {\n            id_lum: 1\n        }\n    }\n];\n\nflow.set('sectorId', sectorId);\nflow.set('currentYear', currentYear);\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 480,
+        "y": 1000,
+        "wires": [
+            [
+                "c3c4c5c6c7c8c9c0"
+            ]
+        ]
+    },
+    {
+        "id": "c3c4c5c6c7c8c9c0",
+        "type": "mongodb in",
+        "z": "7c7613f3e7ca3f2d",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 740,
+        "y": 1000,
+        "wires": [
+            [
+                "d4d5d6d7d8d9d0d1"
+            ]
+        ]
+    },
+    {
+        "id": "d4d5d6d7d8d9d0d1",
+        "type": "function",
+        "z": "7c7613f3e7ca3f2d",
+        "name": "Query Consumo por Luminarias",
+        "func": "const luminarias = msg.payload || [];\nconst currentYear = flow.get('currentYear');\n\nif (luminarias.length === 0) {\n    msg.payload = [];\n    return msg;\n}\n\nconst lumIds = luminarias.map(l => l.id_lum);\n\nmsg.collection = 'consumo_mensual';\nmsg.payload = [\n    {\n        $match: {\n            id_lum: { $in: lumIds },\n            id_year: `year_${currentYear}`\n        }\n    },\n    {\n        $group: {\n            _id: '$id_month',\n            consumoTotal: { $sum: '$consumoMensual' }\n        }\n    },\n    {\n        $sort: { _id: 1 }\n    }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1000,
+        "y": 1000,
+        "wires": [
+            [
+                "e5e6e7e8e9e0e1e2"
+            ]
+        ]
+    },
+    {
+        "id": "e5e6e7e8e9e0e1e2",
+        "type": "mongodb in",
+        "z": "7c7613f3e7ca3f2d",
+        "mongodb": "65016b8d41a78754",
+        "name": "",
+        "collection": "",
+        "operation": "aggregate",
+        "x": 1260,
+        "y": 1000,
+        "wires": [
+            [
+                "f6f7f8f9f0f1f2f3"
+            ]
+        ]
+    },
+    {
+        "id": "f6f7f8f9f0f1f2f3",
+        "type": "function",
+        "z": "7c7613f3e7ca3f2d",
+        "name": "Formatear Respuesta",
+        "func": "const data = msg.payload || [];\nconst monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];\n\n// Crear array con todos los meses inicializados en 0\nconst consumoPorMes = monthNames.map((mes, index) => ({\n    mes: mes,\n    consumo: 0\n}));\n\n// Llenar con datos reales\ndata.forEach(item => {\n    const monthIndex = parseInt(item._id.replace('month_', ''));\n    if (monthIndex >= 0 && monthIndex < 12) {\n        consumoPorMes[monthIndex].consumo = item.consumoTotal;\n    }\n});\n\nmsg.payload = {\n    success: true,\n    data: consumoPorMes\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 1520,
+        "y": 1000,
+        "wires": [
+            [
+                "g7g8g9g0g1g2g3g4"
+            ]
+        ]
+    },
+    {
+        "id": "g7g8g9g0g1g2g3g4",
+        "type": "http response",
+        "z": "7c7613f3e7ca3f2d",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1750,
+        "y": 1000,
+        "wires": []
     },
     {
         "id": "7e6fbc903fa14603",
