@@ -6,7 +6,8 @@ import {
     fetchLuminariasPorSector,
     fetchConsumoMensualSector,
     type DetalleSector as DetalleSectorType,
-    type LuminariaConMedicion
+    type LuminariaConMedicion,
+    type ConsumoNoviembre
 } from '../lib/api'
 
 export const DetalleSector = () => {
@@ -16,7 +17,7 @@ export const DetalleSector = () => {
     const [error, setError] = useState<string | null>(null)
     const [detalle, setDetalle] = useState<DetalleSectorType | null>(null)
     const [luminarias, setLuminarias] = useState<LuminariaConMedicion[]>([])
-    const [consumoMensual, setConsumoMensual] = useState<Array<{ mes: string; consumo: number }>>([])
+    const [consumoMensual, setConsumoMensual] = useState<ConsumoNoviembre[]>([])
 
 
     useEffect(() => {
@@ -184,7 +185,7 @@ export const DetalleSector = () => {
 
                     {/* Gráfica de Consumo Mensual */}
                     <div className="flex-1 rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
-                        <h2 className="text-white text-[28px] font-bold mb-6 text-center">Consumo Mensual (kWh)</h2>
+                        <h2 className="text-white text-[28px] font-bold mb-6 text-center">Consumo Diario - Noviembre 2025 (kWh)</h2>
 
                         <div className="bg-[#394d5c]/60 rounded-[15px] p-6 h-[calc(100%-4rem)] flex items-center">
                             <ResponsiveContainer width="100%" height={300}>
@@ -194,9 +195,12 @@ export const DetalleSector = () => {
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#394d5c" />
                                     <XAxis
-                                        dataKey="mes"
+                                        dataKey="dia"
                                         stroke="#9ca3af"
                                         style={{ fontSize: '12px' }}
+                                        label={{ value: 'Día del mes', position: 'insideBottom', offset: -5, style: { fill: '#9ca3af' } }}
+                                        domain={[1, 30]}
+                                        ticks={[1, 5, 10, 15, 20, 25, 30]}
                                     />
                                     <YAxis
                                         stroke="#9ca3af"

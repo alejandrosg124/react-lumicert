@@ -337,8 +337,18 @@ export const fetchConsumoPorSector = async (): Promise<ConsumoSectorResponse> =>
   return await response.json()
 }
 
-// Obtener consumo mensual por sector
-export const fetchConsumoMensualSector = async (sectorId: string) => {
+// Obtener consumo diario de noviembre por sector
+export interface ConsumoNoviembre {
+  dia: number
+  consumo: number
+}
+
+export interface ConsumoNoviembreResponse {
+  success: boolean
+  data: ConsumoNoviembre[]
+}
+
+export const fetchConsumoMensualSector = async (sectorId: string): Promise<ConsumoNoviembreResponse> => {
   const response = await fetch(`${API_BASE_URL}/api/sectores/${sectorId}/consumo-mensual`)
 
   if (!response.ok) {
