@@ -139,6 +139,7 @@ export interface LuminariasResponse {
 export interface Notificacion {
   _id: string
   id_luminaria: string
+  titulo?: string
   fecha: string
   hora: string
   descripcion: string
@@ -147,6 +148,19 @@ export interface Notificacion {
 export interface NotificacionesResponse {
   success: boolean
   data: Notificacion[]
+}
+
+export interface Reporte {
+  _id: string
+  titulo: string
+  descripcion: string
+  id_luminaria?: string
+  fecha: string
+}
+
+export interface ReportesResponse {
+  success: boolean
+  data: Reporte[]
 }
 
 export interface ConsumoDiario {
@@ -329,6 +343,34 @@ export const fetchConsumoMensualSector = async (sectorId: string) => {
 
   if (!response.ok) {
     throw new Error('Error al obtener el consumo mensual del sector')
+  }
+
+  return await response.json()
+}
+
+// Obtener reportes
+export const fetchReportes = async (): Promise<ReportesResponse> => {
+  const response = await fetch(`${API_BASE_URL}/api/reportes`)
+
+  if (!response.ok) {
+    throw new Error('Error al obtener reportes')
+  }
+
+  return await response.json()
+}
+
+// Crear nuevo reporte
+export const createReporte = async (data: { titulo: string; descripcion: string; id_luminaria?: string }) => {
+  const response = await fetch(`${API_BASE_URL}/api/reportes`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al crear reporte')
   }
 
   return await response.json()

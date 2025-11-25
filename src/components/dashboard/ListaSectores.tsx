@@ -87,14 +87,6 @@ export const ListaSectores = () => {
         )}
       </div>
 
-      <div className="space-y-2">
-        <div className="text-white text-[22px] font-medium">
-          Total: {estadisticas?.totalLuminarias || 0}
-        </div>
-        <div className="text-white text-[22px] font-medium">
-          Funcionando: {estadisticas?.luminariasFuncionando || 0}
-        </div>
-      </div>
     </div>
   )
 }

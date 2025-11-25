@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast, Toaster } from 'sonner'
 import { fetchSectores, fetchLuminarias, createSector, updateSector, deleteSector, linkLuminariasToSector, type Sector, type Luminaria } from '../lib/api'
 import { SectorForm } from '../components/sectores/SectorForm'
 import { LuminariasAssignment } from '../components/sectores/LuminariasAssignment'
@@ -37,7 +38,7 @@ export const SectorConfig = () => {
             await loadData()
         } catch (error) {
             console.error('Error al crear sector:', error)
-            alert('Error al crear el sector')
+            toast.error('Error al crear el sector')
         }
     }
 
@@ -48,7 +49,7 @@ export const SectorConfig = () => {
             await loadData()
         } catch (error) {
             console.error('Error al actualizar sector:', error)
-            alert('Error al actualizar el sector')
+            toast.error('Error al actualizar el sector')
         }
     }
 
@@ -60,13 +61,13 @@ export const SectorConfig = () => {
             await loadData()
         } catch (error) {
             console.error('Error al eliminar sector:', error)
-            alert('Error al eliminar el sector')
+            toast.error('Error al eliminar el sector')
         }
     }
 
     const handleAssignLuminarias = async (sectorId: string, luminariaIds: string[]) => {
         if (!sectorId) {
-            alert('Error: ID del sector no válido')
+            toast.error('Error: ID del sector no válido')
             return
         }
 
@@ -90,7 +91,7 @@ export const SectorConfig = () => {
             }
         } catch (error) {
             console.error('❌ Error detallado al asignar:', error)
-            alert(`No se pudo asignar las luminarias. \nDetalle: ${error instanceof Error ? error.message : 'Error de conexión'}`)
+            toast.error(`No se pudo asignar las luminarias: ${error instanceof Error ? error.message : 'Error de conexión'}`)
         }
     }
 
@@ -117,6 +118,7 @@ export const SectorConfig = () => {
             <div className="fixed inset-0 bg-black/30 z-0"></div>
 
             <div className="relative z-10 p-6 max-w-6xl mx-auto">
+                <Toaster position="top-right" />
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-white text-[32px] font-bold">Configuración de Sectores</h1>
                     <button

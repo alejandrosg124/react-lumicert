@@ -126,105 +126,107 @@ export const DetalleSector = () => {
                     <p className="text-gray-300 text-[18px]">Zona: {detalle.zona}</p>
                 </div>
 
-                {/* Información General del Sector */}
-                <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6 mb-6">
-                    <h2 className="text-white text-[28px] font-bold mb-6 text-center">Información General</h2>
+                <div className="flex flex-col xl:flex-row gap-6 mb-6">
+                    {/* Información General del Sector */}
+                    <div className="flex-1 rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
+                        <h2 className="text-white text-[28px] font-bold mb-6 text-center">Información General</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* Consumo Total del Mes */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Consumo Total del Mes (kWh)</h3>
-                            <p className="text-white text-[28px] font-bold text-center">
-                                {detalle.consumoTotal.toFixed(2)} kWh
-                            </p>
-                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Consumo Total del Mes */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Consumo Total del Mes (kWh)</h3>
+                                <p className="text-white text-[28px] font-bold text-center">
+                                    {detalle.consumoTotal.toFixed(2)} kWh
+                                </p>
+                            </div>
 
-                        {/* Consumo Promedio Diario */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Consumo Promedio Diario (kWh/día)</h3>
-                            <p className="text-white text-[28px] font-bold text-center">
-                                {detalle.consumoPromedio.toFixed(2)} kWh/día
-                            </p>
-                        </div>
+                            {/* Consumo Promedio Diario */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Consumo Promedio Diario (kWh/día)</h3>
+                                <p className="text-white text-[28px] font-bold text-center">
+                                    {detalle.consumoPromedio.toFixed(2)} kWh/día
+                                </p>
+                            </div>
 
-                        {/* Total de Luminarias */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Total de Luminarias</h3>
-                            <p className="text-white text-[28px] font-bold text-center">
-                                {detalle.totalLuminarias}
-                            </p>
-                        </div>
+                            {/* Total de Luminarias */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Total de Luminarias</h3>
+                                <p className="text-white text-[28px] font-bold text-center">
+                                    {detalle.totalLuminarias}
+                                </p>
+                            </div>
 
-                        {/* Luminarias Funcionando */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias Funcionando</h3>
-                            <p className="text-green-400 text-[28px] font-bold text-center">
-                                {detalle.luminariasFuncionando}
-                            </p>
-                        </div>
+                            {/* Luminarias Funcionando */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias Funcionando</h3>
+                                <p className="text-green-400 text-[28px] font-bold text-center">
+                                    {detalle.luminariasFuncionando}
+                                </p>
+                            </div>
 
-                        {/* Luminarias con Falla */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias con Falla</h3>
-                            <p className="text-red-400 text-[28px] font-bold text-center">
-                                {detalle.luminariasConFalla}
-                            </p>
-                        </div>
+                            {/* Luminarias con Falla */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias con Falla</h3>
+                                <p className="text-red-400 text-[28px] font-bold text-center">
+                                    {detalle.luminariasConFalla}
+                                </p>
+                            </div>
 
-                        {/* Luminarias con Sobreconsumo */}
-                        <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
-                            <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias con Sobreconsumo</h3>
-                            <p className="text-yellow-400 text-[28px] font-bold text-center">
-                                {detalle.luminariasConSobreconsumo}
-                            </p>
+                            {/* Luminarias con Sobreconsumo */}
+                            <div className="bg-[#394d5c]/60 rounded-[15px] p-4">
+                                <h3 className="text-gray-400 text-[13px] font-bold text-center mb-2">Luminarias con Sobreconsumo</h3>
+                                <p className="text-yellow-400 text-[28px] font-bold text-center">
+                                    {detalle.luminariasConSobreconsumo}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Gráfica de Consumo Mensual */}
-                <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6 mb-6">
-                    <h2 className="text-white text-[28px] font-bold mb-6 text-center">Consumo Mensual (kWh)</h2>
+                    {/* Gráfica de Consumo Mensual */}
+                    <div className="flex-1 rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
+                        <h2 className="text-white text-[28px] font-bold mb-6 text-center">Consumo Mensual (kWh)</h2>
 
-                    <div className="bg-[#394d5c]/60 rounded-[15px] p-6">
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart
-                                data={consumoMensual}
-                                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#394d5c" />
-                                <XAxis
-                                    dataKey="mes"
-                                    stroke="#9ca3af"
-                                    style={{ fontSize: '12px' }}
-                                />
-                                <YAxis
-                                    stroke="#9ca3af"
-                                    style={{ fontSize: '12px' }}
-                                    label={{ value: 'kWh', angle: -90, position: 'insideLeft', style: { fill: '#9ca3af' } }}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#1a2936',
-                                        border: '1px solid #394d5c',
-                                        borderRadius: '8px',
-                                        color: '#fff'
-                                    }}
-                                    labelStyle={{ color: '#9ca3af' }}
-                                />
-                                <Legend
-                                    wrapperStyle={{ color: '#9ca3af', fontSize: '14px' }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="consumo"
-                                    stroke="#3b82f6"
-                                    strokeWidth={3}
-                                    dot={{ fill: '#3b82f6', r: 5 }}
-                                    activeDot={{ r: 7 }}
-                                    name="Consumo (kWh)"
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <div className="bg-[#394d5c]/60 rounded-[15px] p-6 h-[calc(100%-4rem)] flex items-center">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart
+                                    data={consumoMensual}
+                                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#394d5c" />
+                                    <XAxis
+                                        dataKey="mes"
+                                        stroke="#9ca3af"
+                                        style={{ fontSize: '12px' }}
+                                    />
+                                    <YAxis
+                                        stroke="#9ca3af"
+                                        style={{ fontSize: '12px' }}
+                                        label={{ value: 'kWh', angle: -90, position: 'insideLeft', style: { fill: '#9ca3af' } }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#1a2936',
+                                            border: '1px solid #394d5c',
+                                            borderRadius: '8px',
+                                            color: '#fff'
+                                        }}
+                                        labelStyle={{ color: '#9ca3af' }}
+                                    />
+                                    <Legend
+                                        wrapperStyle={{ color: '#9ca3af', fontSize: '14px' }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="consumo"
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
+                                        dot={{ fill: '#3b82f6', r: 5 }}
+                                        activeDot={{ r: 7 }}
+                                        name="Consumo (kWh)"
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
 

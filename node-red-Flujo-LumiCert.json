@@ -1,6 +1,6 @@
 [
     {
-        "id": "f430733d2357ca62",
+        "id": "6929c5ba37406e25",
         "type": "tab",
         "label": "LumiCert Flujo",
         "disabled": false,
@@ -8,9 +8,9 @@
         "env": []
     },
     {
-        "id": "bc687a255b6a6687",
+        "id": "97e6c770eed1274d",
         "type": "mqtt in",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "topic": "test",
         "qos": "2",
@@ -24,14 +24,14 @@
         "y": 360,
         "wires": [
             [
-                "be3a6065a46602ba"
+                "55cfeec79831e17b"
             ]
         ]
     },
     {
-        "id": "2b3488c1443f129b",
+        "id": "ed8f8ca0aa31af86",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "data_extraction_luminary",
         "func": "//data_extraction_luminary\ntry {\n    const lux = msg.payload.lux;           \n    const fecha = msg.payload.ts_iso;                  \n    const alarmBh1 = msg.payload.alarms.bh1_fail;\n\n    const bancos = msg.payload.bank;\n\n    const var_ambiente = {\n            \"lux\": lux,\n            \"fecha\": fecha,\n            \"alarmBh1\": alarmBh1\n        }\n\n    let luminarias = msg.payload.luminarias.map(l => {\n        const luminariaID = l.id;\n        const nombreLuminaria = l.name;\n        const estadoRelay = l.relay;\n        const ok = l.ok;\n        const voltaje = l.V;\n        const corriente = l.mA; \n        const W = l.W;\n        const fail_low_current = l.fail_low_current;\n        const theft = l.theft   \n        const sobreconsumo = l.overcurrent;                                                                                  \n\n        return {\n                \"corriente\": corriente,\n                \"voltaje\": voltaje,\n                \"ok\": ok,\n                \"W\": W,\n                \"luminariaID\": luminariaID,\n                \"nombreLuminaria\": nombreLuminaria,\n                \"estadoRelay\": estadoRelay,\n                \"fail_low_current\": fail_low_current,\n                \"theft\": theft,\n                \"sobreconsumo\": sobreconsumo\n            }\n        }\n    );\n\n    msg.payload = {\n        \"var_ambiente\": var_ambiente,\n        \"luminarias\": luminarias,\n        \"banco\": bancos\n    }\n}\ncatch (error) {\n    msg.payload = {\n        \"Error\": error\n    }\n}\n\nreturn msg;",
         "outputs": 1,
@@ -44,22 +44,22 @@
         "y": 420,
         "wires": [
             [
-                "9a17c05496c3294c",
-                "406f50146b53517d",
-                "bee9fc22908c5bf9",
-                "38097a4aba5b71b9",
-                "e937696da1996c0e",
-                "822a1bb9c4db4f5d",
-                "c76137fb375e4a39",
-                "3ee6cecc5d2ee03e",
-                "a1b2c3d4e5f6g7h8"
+                "d879047255f1a4a6",
+                "ea37ca81e13b9bbf",
+                "63fca9e5ac90c3e5",
+                "0b3dfdd916c4dfcb",
+                "ce4972d8c67d9a7a",
+                "c123fbd7594d388c",
+                "ade484421a047ce5",
+                "c463a9d8a02e3a91",
+                "a407bcb6af07d0cb"
             ]
         ]
     },
     {
-        "id": "9a17c05496c3294c",
+        "id": "d879047255f1a4a6",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "json_medicion",
         "func": "//json_medicion\nconst var_ambiente = msg.payload.var_ambiente || {};\nlet fecha = var_ambiente.fecha || msg.payload.ts_iso || new Date();\n\n\nlet luminarias = msg.payload.luminarias.map(l => {\n    const luminariaID = l.luminariaID;\n    const nombreLuminaria = l.name;\n    const estadoRelay = l.estadoRelay;\n    const voltaje = l.voltaje;\n    const corriente = l.corriente;\n    const W = l.W;\n    const fail_low_current = l.fail_low_current;\n    const theft = l.theft\n    const sobreconsumo = l.sobreconsumo\n\n    return {\n        \"id_luminaria\": luminariaID,\n        \"fecha\": fecha,\n        \"consumo\": (W*30)/3600,\n        \"estado_rele\": estadoRelay,\n        \"perdida_energia\": theft,\n        \"falla\": fail_low_current,\n        \"sobreconsumo\": sobreconsumo,\n        \"corriente\": corriente,\n        \"voltaje\": voltaje,\n    }\n})\n\nmsg.payload = {\n    \"luminarias\": luminarias\n    }\n\n\nreturn msg;",
         "outputs": 1,
@@ -72,14 +72,14 @@
         "y": 420,
         "wires": [
             [
-                "2b9713d4a73bc004"
+                "1586bd29ebc4d185"
             ]
         ]
     },
     {
-        "id": "406f50146b53517d",
+        "id": "ea37ca81e13b9bbf",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "json_sector",
         "func": "//json_sector\nlet luminarias = msg.payload.luminarias.map(l => {\n    const luminariaID = l.luminariaID;\n    return luminariaID\n});\n\nmsg.payload = {\n    \"nombre_sector\": \"Valle del Lili\",\n    \"direccion\": [\n        52,\n        -27\n    ],\n    \"luminarias\": luminarias\n}\nreturn msg;",
         "outputs": 1,
@@ -95,9 +95,9 @@
         ]
     },
     {
-        "id": "bee9fc22908c5bf9",
+        "id": "63fca9e5ac90c3e5",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "json_notificacion",
         "func": "//json_notificacion\ntry {\n\n    const fecha = msg.payload.var_ambiente.fecha;                  \n    let luminarias = msg.payload.luminarias.map(l => {\n        const luminariaID = l.id;\n        return luminariaID\n    });\n\n    msg.payload = {\n        \"id_luminaria\": luminarias,\n        \"fecha\": fecha,\n        \"descripcion\": null\n    }\n}\ncatch (error) {\n    msg.payload = {\n        \"Error\": error\n    }\n}\n\nreturn msg;",
         "outputs": 1,
@@ -113,9 +113,9 @@
         ]
     },
     {
-        "id": "38097a4aba5b71b9",
+        "id": "0b3dfdd916c4dfcb",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "json_reporte_usuario",
         "func": "//json_reporte_usuario\ntry {\n    const fecha = msg.payload.var_ambiente.fecha;                  \n\n    msg.payload = {\n        \"fecha\": fecha,\n        \"descripcion\": null\n    }\n}\ncatch (error) {\n    msg.payload = {\n        \"Error\": error\n    }\n}\n\nreturn msg;",
         "outputs": 1,
@@ -131,9 +131,9 @@
         ]
     },
     {
-        "id": "e937696da1996c0e",
+        "id": "ce4972d8c67d9a7a",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "json_reporte_mes",
         "func": "//json_reporte_mes\ntry {\n\n    let fecha = msg.payload.var_ambiente.fecha;\n    fecha = new Date(fecha);                \n    const mes = fecha.getMonth() + 1;\n\n    msg.payload = {\n        \"mes\": mes\n    }\n}\ncatch (error) {\n    msg.payload = {\n        \"Error\": error.message\n    }\n}\n\nreturn msg;\n\n\n",
         "outputs": 1,
@@ -149,9 +149,9 @@
         ]
     },
     {
-        "id": "2b9713d4a73bc004",
+        "id": "1586bd29ebc4d185",
         "type": "split",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "splt": "\\n",
         "spltType": "str",
@@ -164,14 +164,14 @@
         "y": 540,
         "wires": [
             [
-                "fb2a0fb91dcbbde3"
+                "075a56b51a281ec0"
             ]
         ]
     },
     {
-        "id": "be3a6065a46602ba",
+        "id": "55cfeec79831e17b",
         "type": "json",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "property": "payload",
         "action": "obj",
@@ -180,14 +180,14 @@
         "y": 360,
         "wires": [
             [
-                "2b3488c1443f129b"
+                "ed8f8ca0aa31af86"
             ]
         ]
     },
     {
-        "id": "822a1bb9c4db4f5d",
+        "id": "c123fbd7594d388c",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "validar_luz_dia_noche",
         "func": "// validar_luz_dia_noche\nconst lux = msg.payload.lux || msg.payload.var_ambiente?.lux || 0;\n\nif (lux > 200) {\n    msg.payload = { mensaje: \"Es de dia\", prender: false };\n} else {\n    msg.payload = { mensaje: \"Es de noche\", prender: true };\n}\n\nmsg.topic = \"tiempo\"; // Tópico de salida al broker MQTT\nreturn msg;",
         "outputs": 1,
@@ -200,14 +200,14 @@
         "y": 360,
         "wires": [
             [
-                "012417af75206663"
+                "78699bd35ed80d77"
             ]
         ]
     },
     {
-        "id": "012417af75206663",
+        "id": "78699bd35ed80d77",
         "type": "mqtt out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "Enviar notificación",
         "topic": "notificacion",
         "qos": "",
@@ -223,11 +223,11 @@
         "wires": []
     },
     {
-        "id": "c76137fb375e4a39",
+        "id": "ade484421a047ce5",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "validar_sobreconsumo",
-        "func": "const { luminarias } = msg.payload  \n\nconst luminaria = luminarias[0]\n\nif(luminaria.voltaje > 2) {\n    msg.payload = {\n        mensaje: `hay sobreconsumo en el nodo: ${luminaria.luminariaID}`, \n        sobreconsumo: true\n    }\n    return msg\n}\nreturn msg",
+        "func": "// Este nodo simplemente pasa el payload al nodo de registro\n// La validación real se hace en registrar_notificacion_sobreconsumo\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -238,15 +238,15 @@
         "y": 300,
         "wires": [
             [
-                "012417af75206663",
-                "15a68664f595d9ac"
+                "78699bd35ed80d77",
+                "74e284c5892cb2ad"
             ]
         ]
     },
     {
-        "id": "15a68664f595d9ac",
+        "id": "74e284c5892cb2ad",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "registrar_notificacion_sobreconsumo",
         "func": "// Guarda notificación cuando una luminaria presenta 3 sobreconsumos consecutivos\n// Usa context para almacenar contadores temporales\n\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const sobreconsumo = l.sobreconsumo === true || l.overcurrent === true;\n\n    // Obtener contador previo del contexto\n    let contador = context.get(`sobreconsumo_${id}`) || 0;\n\n    if (sobreconsumo) {\n        contador++;\n        context.set(`sobreconsumo_${id}`, contador);\n\n        // Si llegó a 3, generar notificación\n        if (contador >= 3) {\n            const notificacion = {\n                titulo: \"Sobreconsumo\",\n                descripcion: `Luminaria ${id} en sobreconsumo por mucho tiempo`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            };\n            notificaciones.push(notificacion);\n\n            // Reiniciar contador después de registrar\n            context.set(`sobreconsumo_${id}`, 0);\n        }\n    } else {\n        // Reinicia si ya no hay sobreconsumo\n        context.set(`sobreconsumo_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n} else {\n    return null; // No enviar nada si no hay alertas\n}",
         "outputs": 1,
@@ -255,18 +255,19 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 970,
-        "y": 240,
+        "x": 930,
+        "y": 260,
         "wires": [
             [
-                "d4e5f6g7h8i9j0k1"
+                "c38c38fab1f9d82e",
+                "2789bcb5b8cf4f73"
             ]
         ]
     },
     {
-        "id": "d4e5f6g7h8i9j0k1",
+        "id": "c38c38fab1f9d82e",
         "type": "split",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "split notif sobreconsumo",
         "splt": "\\n",
         "spltType": "str",
@@ -275,18 +276,19 @@
         "stream": false,
         "addname": "",
         "property": "payload",
-        "x": 1200,
-        "y": 240,
+        "x": 1050,
+        "y": 300,
         "wires": [
             [
-                "8d2ec909165d903f"
+                "9071bdf879e81cb6",
+                "cd7fb11437bc144c"
             ]
         ]
     },
     {
-        "id": "3ee6cecc5d2ee03e",
+        "id": "c463a9d8a02e3a91",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "validar_bajo_consumo",
         "func": "// detectar luminarias en bajo consumo/falla consecutivo\nlet luminarias = msg.payload.luminarias || [];\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const falla = l.fail_low_current === true || l.falla === true;\n\n    let contador = context.get(`falla_${id}`) || 0;\n\n    if (falla) {\n        contador++;\n        context.set(`falla_${id}`, contador);\n\n        if (contador >= 3) {\n            notificaciones.push({\n                titulo: \"Falla\",\n                descripcion: `Luminaria ${id} en falla por mucho tiempo`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            });\n            context.set(`falla_${id}`, 0);\n        }\n    } else {\n        context.set(`falla_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n}\n\nreturn null;",
         "outputs": 1,
@@ -295,19 +297,19 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
-        "y": 140,
+        "x": 700,
+        "y": 200,
         "wires": [
             [
-                "e5f6g7h8i9j0k1l2"
+                "1aa2348a4480ae00"
             ]
         ]
     },
     {
-        "id": "e5f6g7h8i9j0k1l2",
+        "id": "1aa2348a4480ae00",
         "type": "split",
-        "z": "f430733d2357ca62",
-        "name": "split notif falla",
+        "z": "6929c5ba37406e25",
+        "name": "split notif bajo consumo",
         "splt": "\\n",
         "spltType": "str",
         "arraySplt": 1,
@@ -315,18 +317,18 @@
         "stream": false,
         "addname": "",
         "property": "payload",
-        "x": 1050,
-        "y": 100,
+        "x": 850,
+        "y": 160,
         "wires": [
             [
-                "2115e914737d9985"
+                "6d4ed0a7065fec59"
             ]
         ]
     },
     {
-        "id": "4ff7855c34dd5c84",
+        "id": "b50b70d17d118040",
         "type": "mqtt out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "Enviar notificación MQTT (bajo consumo)",
         "topic": "notificacion",
         "qos": "",
@@ -338,13 +340,13 @@
         "expiry": "",
         "broker": "140301bcc7afc699",
         "x": 1220,
-        "y": 160,
+        "y": 140,
         "wires": []
     },
     {
-        "id": "a1b2c3d4e5f6g7h8",
+        "id": "a407bcb6af07d0cb",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "detectar_consumo_dia",
         "func": "// Detectar luminarias consumiendo energía durante el día\nconst lux = msg.payload.var_ambiente?.lux || 0;\nconst luminarias = msg.payload.luminarias || [];\n\nif (!Array.isArray(luminarias) || luminarias.length === 0) return null;\n\nconst now = new Date();\nconst notificaciones = [];\n\nluminarias.forEach(l => {\n    const id = l.luminariaID || l.id_luminaria;\n    const encendida = l.estadoRelay === true;\n    const esDeDia = lux > 200;\n    \n    let contador = context.get(`dia_${id}`) || 0;\n    \n    if (encendida && esDeDia) {\n        contador++;\n        context.set(`dia_${id}`, contador);\n        \n        if (contador >= 3) {\n            notificaciones.push({\n                titulo: \"Consumo de día\",\n                descripcion: `Luminaria ${id} consumiendo energía de día`,\n                fecha: now.toISOString(),\n                id_luminaria: id\n            });\n            context.set(`dia_${id}`, 0);\n        }\n    } else {\n        context.set(`dia_${id}`, 0);\n    }\n});\n\nif (notificaciones.length > 0) {\n    msg.payload = notificaciones;\n    return msg;\n}\n\nreturn null;",
         "outputs": 1,
@@ -353,18 +355,18 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
-        "y": 80,
+        "x": 660,
+        "y": 100,
         "wires": [
             [
-                "b2c3d4e5f6g7h8i9"
+                "d03e75023c1d0f91"
             ]
         ]
     },
     {
-        "id": "b2c3d4e5f6g7h8i9",
+        "id": "d03e75023c1d0f91",
         "type": "split",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "split notif dia",
         "splt": "\\n",
         "spltType": "str",
@@ -373,18 +375,18 @@
         "stream": false,
         "addname": "",
         "property": "payload",
-        "x": 870,
-        "y": 80,
+        "x": 750,
+        "y": 60,
         "wires": [
             [
-                "c3d4e5f6g7h8i9j0"
+                "05d1131076c8babe"
             ]
         ]
     },
     {
-        "id": "c3d4e5f6g7h8i9j0",
+        "id": "05d1131076c8babe",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "Guardar notificación consumo día",
         "collection": "notificacion",
@@ -392,21 +394,21 @@
         "upsert": false,
         "multi": false,
         "operation": "insert",
-        "x": 1110,
-        "y": 80,
+        "x": 960,
+        "y": 100,
         "wires": []
     },
     {
-        "id": "a52442e8f7be21a2",
+        "id": "12b73654d72093b2",
         "type": "inject",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "props": [
             {
                 "p": "payload"
             }
         ],
-        "repeat": "5",
+        "repeat": "15",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -417,16 +419,16 @@
         "y": 720,
         "wires": [
             [
-                "0fb19a561215cfb5",
-                "ffd2eac30d1769db",
-                "23f8bab9802c989c"
+                "7854918595453e6c",
+                "d59aa1b0eac401a5",
+                "2ac20a0d76d1094d"
             ]
         ]
     },
     {
-        "id": "0154dc2cef046c99",
+        "id": "4d9e388016d357f0",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "reformateo_fechas",
         "func": "let data_mediciones = msg.payload;\nmsg.topic = \"mediciones\";\nlet ids_to_tru = data_mediciones.map(\n    (id) => id._id\n);\n\ntry {\n    const validacion_fechas = (fecha) => {\n        const fecha_actual = new Date();\n\n        if (!fecha || isNaN(new Date(fecha).getTime())) {\n            return fecha_actual;\n        }\n\n        fecha = new Date(fecha);\n\n        let day = fecha.getDate();\n        let month = fecha.getMonth();\n        let year = fecha.getFullYear();\n\n        let curr_day = fecha_actual.getDate();\n        let curr_month = fecha_actual.getMonth();\n        let curr_year = fecha_actual.getFullYear();\n\n        if (fecha < new Date('2025-01-01')) {\n            if (curr_day > day) fecha.setDate(curr_day);\n            if (curr_month > month) fecha.setMonth(curr_month);\n            if (curr_year > year) fecha.setFullYear(curr_year);\n        } else if (fecha > fecha_actual) {\n            if (curr_day < day) fecha.setDate(curr_day);\n            if (curr_month < month) fecha.setMonth(curr_month);\n            if (curr_year < year) fecha.setFullYear(curr_year);\n        }\n\n        return fecha;\n    };\n\n    data_mediciones = data_mediciones.map(\n        (x) => {\n            x.fecha = validacion_fechas(x.fecha);\n            return x\n        }\n    );\n\n    msg.payload = data_mediciones;\n}\ncatch (error) {\n    msg.payload = error\n}\n\nreturn msg;",
         "outputs": 1,
@@ -439,16 +441,16 @@
         "y": 720,
         "wires": [
             [
-                "e7dd09b0d3c752e7",
-                "d3f69ea41a66c047",
-                "7d65cfc0450702a6"
+                "fb30a4605c0c47a4",
+                "4824beac6be425fd",
+                "1321c8b50e0e5718"
             ]
         ]
     },
     {
-        "id": "44e7a72f52ad132f",
+        "id": "47fb8a7106c509c3",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "data_luminarias",
         "func": "let data_mediciones = msg.payload.mediciones;\nlet luminarias_procesadas = msg.payload.luminarias_procesadas;\n\ntry {\n    let luminarias_unique = new Set();\n    data_mediciones.forEach(\n        (ele) => {\n            luminarias_unique.add(ele.id_luminaria);\n        }\n    );\n    \n    let luminarias = [...luminarias_unique]\n\n    if (luminarias_procesadas.length == 0) {\n        let luminarias_nuevas = luminarias.map(\n            (lum) => ({'id_lum': `lum_${lum}`, 'id_sector': null})\n        );\n\n        msg.payload = luminarias_nuevas;\n        return msg;\n    };\n\n    // FIX: Filter only NEW luminarias that are NOT in the database\n    let luminarias_nuevas = luminarias.filter(\n        (lum) => !luminarias_procesadas.includes(`lum_${lum}`)\n    );\n\n    if (luminarias_nuevas.length === 0) {\n        return null;\n    }\n\n    luminarias_nuevas = luminarias_nuevas.map(\n        (lum) => ({'id_lum': `lum_${lum}`, 'id_sector': null})\n    );\n\n    msg.payload = luminarias_nuevas;\n} catch (error) {\n    return null;\n}\nreturn msg;",
         "outputs": 1,
@@ -461,15 +463,14 @@
         "y": 760,
         "wires": [
             [
-                "42a3e939f24aa2d4",
-                "4b9530060dc038e3"
+                "0b1f2ec145796c68"
             ]
         ]
     },
     {
-        "id": "77a1f45a6dc3522d",
+        "id": "01c3ac7e893a19e8",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "luminarias_procesadas",
         "func": "let data_mediciones = msg.payload;\nmsg.topic = \"luminarias_procesadas\";\ntry{\n    let luminarias = data_mediciones.map(\n        (ele) => ele.id_lum\n    );\n\n    msg.payload = luminarias;\n} catch (error) {\n    msg.payload = [];\n}\nreturn msg;",
         "outputs": 1,
@@ -482,14 +483,14 @@
         "y": 800,
         "wires": [
             [
-                "d3f69ea41a66c047"
+                "4824beac6be425fd"
             ]
         ]
     },
     {
-        "id": "d3f69ea41a66c047",
+        "id": "4824beac6be425fd",
         "type": "join",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "mode": "custom",
         "build": "object",
@@ -511,14 +512,14 @@
         "y": 760,
         "wires": [
             [
-                "44e7a72f52ad132f"
+                "47fb8a7106c509c3"
             ]
         ]
     },
     {
-        "id": "5542b43428096cae",
+        "id": "0ad7cda2269918cf",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "consumo_mensual",
         "func": "let consumo_mensual = msg.payload;\nmsg.topic = \"consumo_mensual\";\ntry {\n    msg.payload = consumo_mensual;\n} catch (error) {\n    return null;\n}\nreturn msg;",
         "outputs": 1,
@@ -531,14 +532,14 @@
         "y": 640,
         "wires": [
             [
-                "e7dd09b0d3c752e7"
+                "fb30a4605c0c47a4"
             ]
         ]
     },
     {
-        "id": "95a7055f59f42c9d",
+        "id": "2598a2fd7ffcfb1e",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "data_consumo_mensual",
         "func": "let consumo_mensual = msg.payload.consumo_mensual;\n\nlet dataToProcess = msg.payload.mediciones;\nlet idsTrue = dataToProcess.map(\n    (x) => x._id\n);\n\ntry {\n    let dataGroupedId = {};\n    let lum;\n\n    for (let luminarias = 0; luminarias < dataToProcess.length; luminarias++) {\n        lum = dataToProcess[luminarias];\n        let id_lum = `lum_${lum['id_luminaria']}`\n\n        if (!dataGroupedId[id_lum]) {\n            dataGroupedId[id_lum] = []\n        }\n        dataGroupedId[id_lum].push(lum);\n    }\n\n    let keyLum = Object.keys(dataGroupedId);\n    let lumYear = {};\n\n    keyLum.forEach(lum => {\n        let lumGroup = dataGroupedId[lum];\n        let yearsGrouped = {};\n\n        for (let i = 0; i < lumGroup.length; i++) {\n            let date = new Date(lumGroup[i]['fecha'])\n            let year = date.getFullYear();\n            let year_id = `year_${year}`\n\n            if (!yearsGrouped[year_id]) {\n                yearsGrouped[year_id] = [];\n                yearsGrouped[year_id].push(lumGroup[i])\n\n            } else {\n                yearsGrouped[year_id].push(lumGroup[i])\n            }\n        }\n\n        lumYear[lum] = yearsGrouped;\n    })\n\n    let groupedLums = {}\n\n    keyLum.forEach(lum => {\n        let lumById = lumYear[lum]\n        let keyYears = Object.keys(lumById)\n        let years = {}\n\n        keyYears.forEach(year => {\n            let yearGrouped = lumById[year]\n            let months = {};\n\n            for (let m = 0; m < yearGrouped.length; m++) {\n                let date = new Date(yearGrouped[m]['fecha']);\n                let month = date.getMonth();\n                let idMonth = `month_${month}`\n\n                if (!months[idMonth]) {\n                    months[idMonth] = []\n                    months[idMonth].push(yearGrouped[m])\n                } else {\n                    months[idMonth].push(yearGrouped[m])\n                }\n            }\n\n            years[year] = months;\n        })\n\n        groupedLums[lum] = years;\n    })\n\n\n    let consumoLuminarias = [];\n    let lums_id = Object.keys(groupedLums);\n\n    lums_id.forEach(lumKey => {\n        let luminaria = groupedLums[lumKey];\n        let years_id = Object.keys(luminaria);\n\n        years_id.forEach(yearKey => {\n            let year = luminaria[yearKey]\n            let months_id = Object.keys(year)\n\n            months_id.forEach(monthKey =>{\n                let month = year[monthKey]\n\n                let consumo = month.reduce(\n                    (acc, obj) => acc + obj['consumo'], \n                    0\n                )\n\n                let consumoLum = {}\n\n                consumoLum['id_lum'] = lumKey;\n                consumoLum['id_year'] = yearKey;\n                consumoLum['id_month'] = monthKey;\n                consumoLum['consumoMensual'] = consumo;\n\n                consumoLuminarias.push(consumoLum);\n            })\n        })\n    })\n\n    msg.payload = {\n        'consumo_procesado': consumoLuminarias,\n        'consumo_mensual': consumo_mensual,\n        'ids_true': idsTrue\n    };\n\n} catch (error) {\n    return null;\n}\nreturn msg;",
         "outputs": 1,
@@ -551,14 +552,14 @@
         "y": 680,
         "wires": [
             [
-                "26ed358279a5675a"
+                "430450f8893e9ee1"
             ]
         ]
     },
     {
-        "id": "e7dd09b0d3c752e7",
+        "id": "fb30a4605c0c47a4",
         "type": "join",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "mode": "custom",
         "build": "object",
@@ -580,14 +581,14 @@
         "y": 680,
         "wires": [
             [
-                "95a7055f59f42c9d"
+                "2598a2fd7ffcfb1e"
             ]
         ]
     },
     {
-        "id": "26ed358279a5675a",
+        "id": "430450f8893e9ee1",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "actualizar_consumo",
         "func": "let consumo_mensual = msg.payload.consumo_mensual || [];\nlet consumo_procesado = msg.payload.consumo_procesado || [];\nlet ids_true = msg.payload.ids_true || [];\n\nif (!Array.isArray(consumo_procesado) || consumo_procesado.length === 0) {\n    return null;\n}\n\nlet existingKeys = new Set();\nconsumo_mensual.forEach(doc => {\n    existingKeys.add(`${doc.id_lum}|${doc.id_year}|${doc.id_month}`);\n});\n\nlet insert = [];\nlet update = [];\n\nconsumo_procesado.forEach(nuevo => {\n    const key = `${nuevo.id_lum}|${nuevo.id_year}|${nuevo.id_month}`;\n    const consumo = nuevo.consumoMensual || 0;\n\n    if (existingKeys.has(key)) {\n        update.push({\n            filter: {\n                id_lum: nuevo.id_lum,\n                id_year: nuevo.id_year,\n                id_month: nuevo.id_month\n            },\n            update: { $inc: { consumoMensual: consumo } }\n        });\n    } else {\n        insert.push({\n            id_lum: nuevo.id_lum,\n            id_year: nuevo.id_year,\n            id_month: nuevo.id_month,\n            consumoMensual: consumo\n        });\n    }\n});\n\nlet markProcessed = null;\nif (Array.isArray(ids_true) && ids_true.length > 0) {\n    markProcessed = {\n        filter: { _id: { $in: ids_true } },\n        update: { $set: { processed: true } }\n    };\n}\n\nmsg.payload = {\n    insert: insert,\n    update: update,\n    markProcessed: markProcessed\n};\n\nreturn msg;",
         "outputs": 1,
@@ -600,16 +601,15 @@
         "y": 680,
         "wires": [
             [
-                "3531d8785abd24da",
-                "34a7faea215fed46",
-                "4b9530060dc038e3"
+                "10b05adc04596406",
+                "f898ae9c3f3df923"
             ]
         ]
     },
     {
-        "id": "3531d8785abd24da",
+        "id": "10b05adc04596406",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "insert_consumo",
         "func": "let consumo_insert = msg.payload.insert;\ntry {\n    if (consumo_insert.length === 0) return null;\n    msg.payload = consumo_insert;\n} catch (error) {\n    return null;\n}\nreturn msg;",
         "outputs": 1,
@@ -622,14 +622,14 @@
         "y": 660,
         "wires": [
             [
-                "261ceafede3ec322"
+                "7294cf23278bfa44"
             ]
         ]
     },
     {
-        "id": "34a7faea215fed46",
+        "id": "f898ae9c3f3df923",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "update_consumo",
         "func": "let consumo_mensual = msg.payload.consumo_mensual || [];\nlet consumo_procesado = msg.payload.consumo_procesado || [];\nlet ids_true = msg.payload.ids_true;\n\nif (!Array.isArray(consumo_procesado) || consumo_procesado.length === 0) {\n    return null;\n}\n\nlet existingKeys = new Set();\nconsumo_mensual.forEach(doc => {\n    existingKeys.add(`${doc.id_lum}|${doc.id_year}|${doc.id_month}`);\n});\n\nlet insert = [];\nlet update = [];\n\nconsumo_procesado.forEach(nuevo => {\n    const key = `${nuevo.id_lum}|${nuevo.id_year}|${nuevo.id_month}`;\n    const consumo = nuevo.consumoMensual || 0;\n\n    if (existingKeys.has(key)) {\n        update.push({\n            filter: {\n                id_lum: nuevo.id_lum,\n                id_year: nuevo.id_year,\n                id_month: nuevo.id_month\n            },\n            update: { $inc: { consumoMensual: consumo } }\n        });\n    } else {\n        insert.push({\n            id_lum: nuevo.id_lum,\n            id_year: nuevo.id_year,\n            id_month: nuevo.id_month,\n            consumoMensual: consumo\n        });\n    }\n});\n\nmsg.payload = { insert, update };\nreturn msg;",
         "outputs": 1,
@@ -642,14 +642,14 @@
         "y": 720,
         "wires": [
             [
-                "a49dd2238fe134cb"
+                "3e3ba538e060b19e"
             ]
         ]
     },
     {
-        "id": "766192681b393a9d",
+        "id": "89876231519a3efd",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "function 1",
         "func": "msg.query = msg.payload.filter;\nmsg.update = msg.payload.update;\ndelete msg.payload;\nreturn msg;",
         "outputs": 1,
@@ -662,14 +662,14 @@
         "y": 720,
         "wires": [
             [
-                "6f20205be68247e1"
+                "7ddf8447cdc9b82b"
             ]
         ]
     },
     {
-        "id": "a49dd2238fe134cb",
+        "id": "3e3ba538e060b19e",
         "type": "split",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "",
         "splt": "\\n",
         "spltType": "str",
@@ -682,14 +682,14 @@
         "y": 720,
         "wires": [
             [
-                "766192681b393a9d"
+                "89876231519a3efd"
             ]
         ]
     },
     {
-        "id": "fb2a0fb91dcbbde3",
+        "id": "075a56b51a281ec0",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "LumiCertDBB",
         "collection": "medicion",
@@ -702,9 +702,9 @@
         "wires": []
     },
     {
-        "id": "8d2ec909165d903f",
+        "id": "9071bdf879e81cb6",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "Guardar notificación sobreconsumo",
         "collection": "notificacion",
@@ -712,14 +712,14 @@
         "upsert": false,
         "multi": false,
         "operation": "insert",
-        "x": 1300,
-        "y": 240,
+        "x": 1230,
+        "y": 340,
         "wires": []
     },
     {
-        "id": "2115e914737d9985",
+        "id": "6d4ed0a7065fec59",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "Guardar notificacion bajo consumo",
         "collection": "notificacion",
@@ -727,14 +727,14 @@
         "upsert": false,
         "multi": false,
         "operation": "insert",
-        "x": 1200,
-        "y": 100,
+        "x": 1020,
+        "y": 200,
         "wires": []
     },
     {
-        "id": "42a3e939f24aa2d4",
+        "id": "0b1f2ec145796c68",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "luminarias",
         "collection": "luminarias",
@@ -747,9 +747,9 @@
         "wires": []
     },
     {
-        "id": "261ceafede3ec322",
+        "id": "7294cf23278bfa44",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "consumo_mensual_insert",
         "collection": "consumo_mensual",
@@ -762,9 +762,9 @@
         "wires": []
     },
     {
-        "id": "6f20205be68247e1",
+        "id": "7ddf8447cdc9b82b",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "consumo_mensual_update",
         "collection": "consumo_mensual",
@@ -777,9 +777,9 @@
         "wires": []
     },
     {
-        "id": "0fb19a561215cfb5",
+        "id": "7854918595453e6c",
         "type": "mongodb in",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "medicion",
         "collection": "medicion1",
@@ -788,14 +788,14 @@
         "y": 720,
         "wires": [
             [
-                "0154dc2cef046c99"
+                "4d9e388016d357f0"
             ]
         ]
     },
     {
-        "id": "23f8bab9802c989c",
+        "id": "2ac20a0d76d1094d",
         "type": "mongodb in",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "consumo_mensual",
         "collection": "consumo_mensual",
@@ -804,14 +804,14 @@
         "y": 640,
         "wires": [
             [
-                "5542b43428096cae"
+                "0ad7cda2269918cf"
             ]
         ]
     },
     {
-        "id": "ffd2eac30d1769db",
+        "id": "d59aa1b0eac401a5",
         "type": "mongodb in",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "luminarias",
         "collection": "luminarias",
@@ -820,30 +820,14 @@
         "y": 800,
         "wires": [
             [
-                "77a1f45a6dc3522d"
+                "01c3ac7e893a19e8"
             ]
         ]
     },
     {
-        "id": "4b9530060dc038e3",
-        "type": "debug",
-        "z": "f430733d2357ca62",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1200,
-        "y": 840,
-        "wires": []
-    },
-    {
-        "id": "7d65cfc0450702a6",
+        "id": "1321c8b50e0e5718",
         "type": "split",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "split medicion1",
         "splt": "\\n",
         "spltType": "str",
@@ -856,14 +840,14 @@
         "y": 920,
         "wires": [
             [
-                "1bdb6956ba24e43d"
+                "ae8d836a82bbd8ad"
             ]
         ]
     },
     {
-        "id": "1bdb6956ba24e43d",
+        "id": "ae8d836a82bbd8ad",
         "type": "function",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "name": "build_update_medicion1",
         "func": "// build_update_medicion1 — para node-red-node-mongodb (oficial)\nconst doc = msg.payload;\nif (!doc || !doc._id || !doc.fecha) {\n  node.warn(\"Falta _id o fecha en el documento\");\n  return null;\n}\n\n// Filtro por _id\nmsg.query = { _id: doc._id };      // si tu _id es string, activa 'Use MongoDB ObjectId' en el nodo out\n\n// Documento de UPDATE (¡va en msg.payload!)\nmsg.payload = { $set: { fecha: new Date(doc.fecha) } };\n\n// Opcional: si tus fechas vienen como \"DD/MM/YYYY\", parsea tú:\n// const [d,m,y] = doc.fecha.split('/'); msg.payload = { $set: { fecha: new Date(`${y}-${m}-${d}T00:00:00Z`) } };\n\nreturn msg;\n",
         "outputs": 1,
@@ -879,9 +863,9 @@
         ]
     },
     {
-        "id": "5291ed7581ba0f73",
+        "id": "6276fafcf19dedec",
         "type": "mongodb out",
-        "z": "f430733d2357ca62",
+        "z": "6929c5ba37406e25",
         "mongodb": "bdc4e5f59c664d63",
         "name": "medicion1_update",
         "collection": "medicion1",
@@ -891,6 +875,38 @@
         "operation": "store",
         "x": 1430,
         "y": 920,
+        "wires": []
+    },
+    {
+        "id": "cd7fb11437bc144c",
+        "type": "debug",
+        "z": "6929c5ba37406e25",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1280,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "2789bcb5b8cf4f73",
+        "type": "debug",
+        "z": "6929c5ba37406e25",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 240,
         "wires": []
     },
     {
@@ -950,7 +966,7 @@
         "alpnprotocol": ""
     },
     {
-        "id": "0ac2dc53c553915c",
+        "id": "4c243f55c6bde7d0",
         "type": "global-config",
         "env": [],
         "modules": {

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { toast, Toaster } from 'sonner'
 import {
   fetchConsumoTotalMes,
   fetchConsumoMesAnterior,
   fetchSectores,
   fetchNotificaciones,
+  fetchReportes,
+  createReporte,
   fetchEstadisticas,
   fetchConsumoDiario,
   fetchConsumoPorHora,
@@ -12,6 +15,7 @@ import {
   type ConsumoTotalMesResponse,
   type ConsumoMesAnteriorResponse,
   type NotificacionesResponse,
+  type ReportesResponse,
   type EstadisticasResponse,
   type ConsumoDiarioResponse,
   type ConsumoHoraResponse,
@@ -27,6 +31,9 @@ export const Index = () => {
   const [consumoDiario, setConsumoDiario] = useState<ConsumoDiarioResponse['data']>([])
   const [consumoPorHora, setConsumoPorHora] = useState<ConsumoHoraResponse['data']>([])
   const [ultimaMedicion, setUltimaMedicion] = useState<UltimaMedicionResponse['data']>(null)
+  const [reportes, setReportes] = useState<ReportesResponse['data']>([])
+  const [showReporteModal, setShowReporteModal] = useState(false)
+  const [nuevoReporte, setNuevoReporte] = useState({ titulo: '', descripcion: '', id_luminaria: '' })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -38,6 +45,7 @@ export const Index = () => {
           consumoAnteriorData,
           sectoresData,
           notificacionesData,
+          reportesData,
           estadisticasData,
           consumoDiarioData,
           consumoPorHoraData,
@@ -47,6 +55,7 @@ export const Index = () => {
           fetchConsumoMesAnterior(),
           fetchSectores(),
           fetchNotificaciones(),
+          fetchReportes(),
           fetchEstadisticas(),
           fetchConsumoDiario(),
           fetchConsumoPorHora(),
@@ -58,6 +67,7 @@ export const Index = () => {
           consumoAnterior: consumoAnteriorData,
           sectores: sectoresData,
           notificaciones: notificacionesData,
+          reportes: reportesData,
           estadisticas: estadisticasData,
           consumoDiario: consumoDiarioData,
           consumoPorHora: consumoPorHoraData,
@@ -76,6 +86,7 @@ export const Index = () => {
         setConsumoMes(consumoMesData.data)
         setConsumoAnterior(consumoAnteriorData.data)
         setNotificaciones(notificacionesData.data)
+        setReportes(reportesData.data)
         setEstadisticas(estadisticasData.data)
         setConsumoDiario(consumoDiarioData.data)
         setConsumoPorHora(horasCompletas)
@@ -103,6 +114,24 @@ export const Index = () => {
     return () => clearInterval(intervalId)
   }, [])
 
+  // Auto-refresh notificaciones y reportes cada 3 segundos
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const [notificacionesData, reportesData] = await Promise.all([
+          fetchNotificaciones(),
+          fetchReportes()
+        ])
+        setNotificaciones(notificacionesData.data)
+        setReportes(reportesData.data)
+      } catch (error) {
+        console.error('Error al actualizar notificaciones/reportes:', error)
+      }
+    }, 3000) // 3 segundos
+
+    return () => clearInterval(interval)
+  }, [])
+
   // Calcular variación porcentual
   const calcularVariacion = () => {
     if (!consumoMes || !consumoAnterior) return 0
@@ -122,6 +151,7 @@ export const Index = () => {
 
   return (
     <div className="w-full min-h-screen relative">
+      <Toaster position="top-right" />
       {/* Background image - full screen */}
       <div className="fixed inset-0 w-full h-full z-0">
         <img
@@ -140,33 +170,6 @@ export const Index = () => {
         <div className="w-[290px] flex flex-col gap-2">
           {/* Sectores */}
           <ListaSectores />
-
-          {/* Daños reportados */}
-          <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
-            <h2 className="text-white text-[24px] font-bold text-center mb-4">Daños reportados</h2>
-
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {notificaciones.slice(0, 3).map((notif) => (
-                <div key={notif._id} className="bg-[#2a3d4d]/60 rounded-[20px] p-4 flex items-start gap-3">
-                  <div className="w-[40px] h-[40px] rounded-full bg-[#3d5161] flex items-center justify-center text-[24px] flex-shrink-0">
-                    📋
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white text-[15px] font-semibold">Reporte</span>
-                      <span className="text-gray-400 text-[14px]">{notif.hora}</span>
-                    </div>
-                    <p className="text-white text-[14px] truncate">{notif.descripcion}</p>
-                  </div>
-                </div>
-              ))}
-              {notificaciones.length === 0 && (
-                <div className="text-white text-center text-sm py-4">
-                  No hay reportes de daños
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Última Medición */}
           <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
@@ -358,46 +361,135 @@ export const Index = () => {
 
         {/* Panel derecho - Notificaciones y Precios */}
         <div className="w-[290px] flex flex-col gap-2">
-          {/* Notificaciones Recientes */}
-          <div className="rounded-[20px] bg-[#1a2936]/70 backdrop-blur-sm p-6">
-            <h2 className="text-white text-[24px] font-bold text-center mb-4">Notificaciones Recientes</h2>
+          {/* Notificaciones Recientes - Liquid Glass Design */}
+          <div className="rounded-[20px] bg-[#2a3d4d]/40 backdrop-blur-xl p-4 border border-white/10">
+            <h2 className="text-white text-[20px] font-bold mb-3">Notificaciones Recientes</h2>
 
-            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent mb-3"></div>
+
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {notificaciones.slice(0, 5).map((notif) => {
-                // Determinar color basado en descripción
-                const getColor = () => {
-                  const desc = notif.descripcion.toLowerCase()
-                  if (desc.includes('falla') || desc.includes('daño') || desc.includes('crítico')) {
-                    return 'bg-red-500'
-                  } else if (desc.includes('alerta') || desc.includes('advertencia')) {
-                    return 'bg-yellow-500'
+                // Determinar el icono y color según el tipo de notificación
+                const getNotificationStyle = (titulo: string, descripcion: string) => {
+                  const text = (titulo + ' ' + descripcion).toLowerCase()
+                  if (text.includes('falla') || text.includes('crítico') || text.includes('daño')) {
+                    return {
+                      icon: '!',
+                      bgColor: 'bg-red-500',
+                      borderColor: 'border-red-500/30'
+                    }
+                  } else if (text.includes('sobreconsumo') || text.includes('advertencia') || text.includes('alerta')) {
+                    return {
+                      icon: '!',
+                      bgColor: 'bg-yellow-500',
+                      borderColor: 'border-yellow-500/30'
+                    }
                   } else {
-                    return 'bg-blue-500'
+                    return {
+                      icon: '!',
+                      bgColor: 'bg-blue-500',
+                      borderColor: 'border-blue-500/30'
+                    }
                   }
                 }
 
+                const style = getNotificationStyle(notif.titulo || '', notif.descripcion)
+                const fecha = new Date(notif.fecha)
+                const hora = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+
                 return (
-                  <div key={notif._id} className="bg-[#2a3d4d]/60 rounded-[20px] p-4 flex items-start gap-3">
-                    <div className={`w-[40px] h-[40px] rounded-full ${getColor()} flex items-center justify-center text-[24px] flex-shrink-0`}>
-                      ⚠️
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-white text-[15px] font-semibold">Alerta</span>
-                        <span className="text-gray-400 text-[14px]">{notif.hora}</span>
+                  <div
+                    key={notif._id}
+                    className={`bg-[#3d4f5e]/50 backdrop-blur-md rounded-[16px] p-3 border ${style.borderColor} hover:bg-[#3d4f5e]/70 transition-all duration-300`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icono de alerta */}
+                      <div className={`w-[40px] h-[40px] ${style.bgColor} rounded-[10px] flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                        <span className="text-white text-[22px] font-bold">{style.icon}</span>
                       </div>
-                      <p className="text-white text-[14px]">{notif.descripcion.substring(0, 50)}{notif.descripcion.length > 50 ? '..' : ''}</p>
+
+                      {/* Contenido */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-0.5">
+                          <h3 className="text-white text-[14px] font-semibold">
+                            {notif.titulo || 'Alerta'}
+                          </h3>
+                          <span className="text-gray-400 text-[11px] whitespace-nowrap">
+                            {hora}
+                          </span>
+                        </div>
+                        <p className="text-white/90 text-[12px] leading-snug">
+                          {notif.descripcion}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )
               })}
 
               {notificaciones.length === 0 && (
-                <div className="text-white text-center text-sm py-8">
-                  No hay notificaciones recientes
+                <div className="text-center py-6">
+                  <p className="text-white/60 text-[13px]">No hay notificaciones recientes</p>
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Reportes - Liquid Glass Design */}
+          <div className="rounded-[20px] bg-[#2a3d4d]/40 backdrop-blur-xl p-4 border border-white/10">
+            <h2 className="text-white text-[20px] font-bold mb-3">Reportes</h2>
+
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent mb-3"></div>
+
+            <div className="space-y-2 max-h-[400px] overflow-y-auto mb-3 pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+              {reportes.slice(0, 3).map((reporte) => {
+                const fecha = new Date(reporte.fecha)
+                const hora = fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: true })
+
+                return (
+                  <div
+                    key={reporte._id}
+                    className="bg-[#3d4f5e]/50 backdrop-blur-md rounded-[16px] p-3 border border-blue-500/30 hover:bg-[#3d4f5e]/70 transition-all duration-300"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icono de reporte */}
+                      <div className="w-[40px] h-[40px] bg-blue-500 rounded-[10px] flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <span className="text-[22px]">📋</span>
+                      </div>
+
+                      {/* Contenido */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-0.5">
+                          <h3 className="text-white text-[14px] font-semibold">
+                            {reporte.titulo}
+                          </h3>
+                          <span className="text-gray-400 text-[11px] whitespace-nowrap">
+                            {hora}
+                          </span>
+                        </div>
+                        <p className="text-white/90 text-[12px] leading-snug max-h-[60px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                          {reporte.descripcion}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {reportes.length === 0 && (
+                <div className="text-center py-6">
+                  <p className="text-white/60 text-[13px]">No hay reportes</p>
+                </div>
+              )}
+            </div>
+
+            {/* Botón Nuevo Reporte */}
+            <button
+              onClick={() => setShowReporteModal(true)}
+              className="w-full bg-[#2a3d4d] hover:bg-[#394d5c] text-white px-4 py-2 rounded-[12px] text-[14px] font-semibold transition-colors shadow-md border border-white/5 backdrop-blur-sm"
+            >
+              + Nuevo Reporte
+            </button>
           </div>
 
           {/* Precios */}
@@ -432,6 +524,105 @@ export const Index = () => {
 
       </div>
 
-    </div>
+      {/* Modal Nuevo Reporte */}
+      {
+        showReporteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1a2936] rounded-[20px] p-6 max-w-md w-full border border-white/10 shadow-2xl">
+              <h2 className="text-white text-[24px] font-bold mb-4">Nuevo Reporte</h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-white text-[14px] font-medium mb-2 block">Título</label>
+                  <input
+                    type="text"
+                    value={nuevoReporte.titulo}
+                    onChange={(e) => setNuevoReporte({ ...nuevoReporte, titulo: e.target.value })}
+                    className="w-full bg-[#2a3d4d]/60 border border-white/10 rounded-[12px] px-4 py-2 text-white text-[14px] focus:outline-none focus:border-blue-500 transition-colors"
+                    placeholder="Ej: Falla en luminaria"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-white text-[14px] font-medium mb-2 block">Descripción</label>
+                  <textarea
+                    value={nuevoReporte.descripcion}
+                    onChange={(e) => setNuevoReporte({ ...nuevoReporte, descripcion: e.target.value })}
+                    className="w-full bg-[#2a3d4d]/60 border border-white/10 rounded-[12px] px-4 py-2 text-white text-[14px] focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                    placeholder="Describe el problema..."
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-white text-[14px] font-medium mb-2 block">ID Luminaria (opcional)</label>
+                  <input
+                    type="text"
+                    value={nuevoReporte.id_luminaria}
+                    onChange={(e) => setNuevoReporte({ ...nuevoReporte, id_luminaria: e.target.value })}
+                    className="w-full bg-[#2a3d4d]/60 border border-white/10 rounded-[12px] px-4 py-2 text-white text-[14px] focus:outline-none focus:border-blue-500 transition-colors"
+                    placeholder="Ej: 4"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowReporteModal(false)
+                      setNuevoReporte({ titulo: '', descripcion: '', id_luminaria: '' })
+                    }}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-[12px] transition-all duration-200 text-[14px]"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!nuevoReporte.titulo || !nuevoReporte.descripcion) {
+                        toast.error('Por favor completa título y descripción')
+                        return
+                      }
+
+                      try {
+                        console.log('Creando reporte...', nuevoReporte)
+                        const response = await createReporte({
+                          titulo: nuevoReporte.titulo,
+                          descripcion: nuevoReporte.descripcion,
+                          id_luminaria: nuevoReporte.id_luminaria || undefined
+                        })
+                        console.log('Respuesta del servidor:', response)
+
+                        // Cerrar modal y limpiar form primero
+                        setShowReporteModal(false)
+                        setNuevoReporte({ titulo: '', descripcion: '', id_luminaria: '' })
+
+                        // Mostrar toast de éxito
+                        toast.success('Reporte creado exitosamente')
+
+                        // Recargar reportes en segundo plano
+                        fetchReportes().then(reportesData => {
+                          setReportes(reportesData.data)
+                        }).catch(err => {
+                          console.error('Error al recargar reportes:', err)
+                        })
+                      } catch (error) {
+                        console.error('Error al crear reporte:', error)
+                        toast.error('Error al crear el reporte')
+                        // Cerrar modal incluso si hay error
+                        setShowReporteModal(false)
+                        setNuevoReporte({ titulo: '', descripcion: '', id_luminaria: '' })
+                      }
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-[12px] transition-all duration-200 shadow-lg hover:shadow-xl text-[14px]"
+                  >
+                    Crear Reporte
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+    </div >
   )
 }
